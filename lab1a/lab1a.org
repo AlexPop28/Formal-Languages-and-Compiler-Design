@@ -1,0 +1,76 @@
+#+TITLE: Lab 1a assignment
+#+AUTHOR: Alex Pop
+* P1: max of 3 integers
+#+BEGIN_SRC
+int a;
+int b;
+int c;
+a = read_int();
+b = read_int();
+c = read_int();
+int ans;
+ans = a;
+if (b > ans) {
+  ans = b
+}
+if (c > ans) {
+  ans = c;
+}
+print_int(ans);
+#+END_SRC
+
+* P2: primality check
+#+BEGIN_SRC
+int n;
+n = read_int();
+int prime;
+prime = 1;
+int d;
+d = 2;
+while (d < n) {
+  if (n % d == 0) {
+    prime = 0;
+  }
+  d = d + 1;
+}
+if (prime == 0) {
+  print_str("not prime")
+} else {
+  print_str("prime")
+}
+#+END_SRC
+
+* P3: sum of n numbers
+#+BEGIN_SRC
+int n;
+n = read_int();
+int i;
+i = 0;
+int sum;
+sum = 0;
+while (i < n) {
+  int x;
+  x = read_int();
+  sum = sum + x;
+}
+print_int(sum);
+#+END_SRC
+
+* P1err: sum of n numbers with 2 lexical errors
+#+BEGIN_SRC
+int _n;
+_n = read_int(); // wrong comment
+int i;
+i = 0;
+int sum;
+sum = 0;
+while (i < _n) {
+  int x;
+  x = read_int();
+  sum = sum + x;
+}
+print_int(sum);
+
+#+END_SRC
+On the first line, ~int _n;~, there is a lexical error since =_n= cannot be classified as a token.
+On the second line, ~_n = read_int(); // wrong comment~, there is another lexical error since ~/~ is not part of the alphabet.

@@ -1,0 +1,4 @@
+\contentsline {section}{\numberline {1}P1: max of 3 integers}{1}{section.1}%
+\contentsline {section}{\numberline {2}P2: primality check}{2}{section.2}%
+\contentsline {section}{\numberline {3}P3: sum of n numbers}{2}{section.3}%
+\contentsline {section}{\numberline {4}P1err: sum of n numbers with 2 lexical errors}{2}{section.4}%

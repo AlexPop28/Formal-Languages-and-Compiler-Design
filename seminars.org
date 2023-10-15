@@ -1,0 +1,17 @@
+* Seminar 1
+** Ex 1
+<letter> ::= a | b | c | ... | A | B | ... | Z
+<sequence_of_letters> ::= <letter> | <letter><sequence_of_letters>
+
+** Ex 2
+<non_zero_digit> ::= 1 | 2 | ... | 9
+<digit> ::= 0 | <non_zero_digit>
+<sign> ::= + | -
+<sequence_of_digits> ::= <digit> | <digit><sequence_of_digits>
+<prefix> ::= <non_zero_digit> | <sign><non_zero_digit>
+<integer> ::= 0 | <prefix> | <prefix><sequence_of_digits>
+
+** Ex2 in EBNF
+non_zero_digit = "1" | "2" | ... | "9"
+digit = "0" | non_zero_digit
+integer = "0" | ["+" | "-"]non_zero_digit{digit}

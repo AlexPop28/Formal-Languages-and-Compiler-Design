@@ -1,0 +1,8 @@
+\contentsline {section}{\numberline {1}Lexic.txt}{1}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Alphabet}{1}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Lexic}{1}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Special symbols}{1}{subsubsection.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.2.2}Identifiers}{2}{subsubsection.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.2.3}Constants}{2}{subsubsection.1.2.3}%
+\contentsline {section}{\numberline {2}Syntax.in}{2}{section.2}%
+\contentsline {section}{\numberline {3}Token.in}{3}{section.3}%

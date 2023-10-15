@@ -1,0 +1,65 @@
+% Created 2023-10-14 Sat 21:32
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Alex Pop}
+\date{\today}
+\title{}
+\hypersetup{
+ pdfauthor={Alex Pop},
+ pdftitle={},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 29.1 (Org mode 9.6.6)}, 
+ pdflang={English}}
+\begin{document}
+
+\tableofcontents
+
+\section{Alphabet}
+\label{sec:org8211244}
+\begin{itemize}
+\item lowercase letters of the English alphabet
+\item digits \texttt{0-9}
+\item underscore: \texttt{\_}
+\end{itemize}
+
+\section{Lexic}
+\label{sec:org33c1541}
+\subsection{Special symbols}
+\label{sec:org7979c88}
+\begin{itemize}
+\item operators: \texttt{+, -, *, /, \%, ==, <, <=, >, >=, =, !=}
+\item separators: \texttt{\{, \}, [, ], (, ), ;, space, newline, "}
+\item reserved words: \texttt{int, str, double, if, else, read\_int, read\_str, read\_double, print\_int, print\_str, print\_double, while, get, set}
+\end{itemize}
+
+\subsection{Identifiers}
+\label{sec:org55b9f77}
+A sequence of lowercase letters, digits and underscore with the first character being a lowercase letter.
+\begin{verbatim}
+identifier = (letter|"_"){letter|digit|"_"}
+letter = "A"|"B"|..|"Z"|"a"|"b"..|"z"
+digit = "0"|non_zero_digit
+\end{verbatim}
+
+\subsection{Constants}
+\label{sec:orgfdd8abd}
+\begin{verbatim}
+int_constant = maybe_sign non_zero_digit {digit} | "0"
+non_zero_digit = "1"|"2"|...|"9"
+maybe_sign = ["+"|"-"]
+str_constant = """{letter|digit|"_"|" "}"""
+double_constant = (int_constant | (maybe_sign "0")) "." {digit}
+\end{verbatim}
+\end{document}

@@ -1,0 +1,154 @@
+% Created 2023-10-14 Sat 21:40
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Alex Pop}
+\date{\today}
+\title{Lab 1b}
+\hypersetup{
+ pdfauthor={Alex Pop},
+ pdftitle={Lab 1b},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 29.1 (Org mode 9.6.6)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Lexic.txt}
+\label{sec:orgae105f5}
+\subsection{Alphabet}
+\label{sec:org0bb0912}
+\begin{itemize}
+\item lowercase letters of the English alphabet
+\item digits \texttt{0-9}
+\item underscore: \texttt{\_}
+\end{itemize}
+
+\subsection{Lexic}
+\label{sec:orge32e269}
+\subsubsection{Special symbols}
+\label{sec:org63a2ff6}
+\begin{itemize}
+\item operators: \texttt{+, -, *, /, \%, ==, <, <=, >, >=, =, !=}
+\item separators: \texttt{\{, \}, [, ], (, ), ;, space, newline, "}
+\item reserved words: \texttt{int, str, double, if, else, read\_int, read\_str, read\_double, print\_int, print\_str, print\_double, while, get, set}
+\end{itemize}
+
+\subsubsection{Identifiers}
+\label{sec:org16069a2}
+A sequence of lowercase letters, digits and underscore with the first character being a lowercase letter.
+\begin{verbatim}
+identifier = (letter|"_"){letter|digit|"_"}
+letter = "A"|"B"|..|"Z"|"a"|"b"..|"z"
+digit = "0"|non_zero_digit
+\end{verbatim}
+
+\subsubsection{Constants}
+\label{sec:orgff4fa14}
+\begin{verbatim}
+int_constant = maybe_sign non_zero_digit {digit} | "0"
+non_zero_digit = "1"|"2"|...|"9"
+maybe_sign = ["+"|"-"]
+str_constant = """{letter|digit|"_"|" "}"""
+double_constant = (int_constant | (maybe_sign "0")) "." {digit}
+\end{verbatim}
+
+\section{Syntax.in}
+\label{sec:org374eee1}
+\begin{verbatim}
+program = {statement}
+statement = ((variable_declaration | function_call | assignment) ";") | if | while
+
+type = "int" | "str" | "double"
+
+variable_declaration =
+  | type " " identifier
+  | type " " identifier "[" int_constant "]"
+
+function_call =
+  | get_call
+  | set_call
+  | read_call
+  | print_call
+
+get_call = "get" "(" identifier "," int_expression ")"
+set_call = "set" "(" identifier "," int_expression "," expression ")"
+read_call = ("read_int" | "read_str" | "read_double") "(" ")"
+print_call = ("print_int" | "print_str" | "print_double") "(" expression ")"
+
+assignment = identifier "=" expression
+
+if = "if" "(" bool_expression ")" "{" program "}" ["else" "{" program "}"]
+while = "while" "(" bool_expression ")" "{" program "}"
+
+constant = int_constant | str_constant | double_constant
+
+bool_operator = "==" | "!=" | "<" | ">" | "<=" | ">="
+bool_expression = (constant | identifier) bool_operator (constant | identifier)
+
+expression = int_expression | str_expression | double_expression
+  int_expression = int_term | int_term ("+" | "-") int_expression
+    int_term = int_factor | int_factor ("*" | "/" | "%") int_term 
+      int_factor = int_constant | identifier | "(" int_expression ")"
+  double_expression = double_term | double_term ("+" | "-") double_expression
+    double_term = double_factor | double_factor ("*" | "/") double_term 
+      double_factor = double_constant | identifier | "(" double_expression ")"
+  str_expression = str_term | str_term "+" str_expression
+    str_term = str_constant | identifier
+\end{verbatim}
+
+\section{Token.in}
+\label{sec:org19a3e1c}
+\begin{verbatim}
++
+-
+*
+/
+%
+==
+<
+<=
+>
+>=
+=
+!=
+{
+}
+(
+)
+[
+]
+;
+space
+newline
+"
+int
+str
+double
+if
+else
+while
+get
+set
+read_int
+read_str
+read_double
+print_int
+print_str
+print_double
+.
+\end{verbatim}
+\end{document}

@@ -1,0 +1,108 @@
+% Created 2023-10-15 Sun 12:31
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Alex Pop}
+\date{\today}
+\title{Lab 1a assignment}
+\hypersetup{
+ pdfauthor={Alex Pop},
+ pdftitle={Lab 1a assignment},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 29.1 (Org mode 9.6.6)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{P1: max of 3 integers}
+\label{sec:orgd8830de}
+\begin{verbatim}
+int a;
+int b;
+int c;
+a = read_int();
+b = read_int();
+c = read_int();
+int ans;
+ans = a;
+if (b > ans) {
+  ans = b
+}
+if (c > ans) {
+  ans = c;
+}
+print_int(ans);
+\end{verbatim}
+
+\section{P2: primality check}
+\label{sec:org557d9fb}
+\begin{verbatim}
+int n;
+n = read_int();
+int prime;
+prime = 1;
+int d;
+d = 2;
+while (d < n) {
+  if (n % d == 0) {
+    prime = 0;
+  }
+  d = d + 1;
+}
+if (prime == 0) {
+  print_str("not prime")
+} else {
+  print_str("prime")
+}
+\end{verbatim}
+
+\section{P3: sum of n numbers}
+\label{sec:org2329c30}
+\begin{verbatim}
+int n;
+n = read_int();
+int i;
+i = 0;
+int sum;
+sum = 0;
+while (i < n) {
+  int x;
+  x = read_int();
+  sum = sum + x;
+}
+print_int(sum);
+\end{verbatim}
+
+\section{P1err: sum of n numbers with 2 lexical errors}
+\label{sec:org68ba7ab}
+\begin{verbatim}
+int _n;
+_n = read_int(); // wrong comment
+int i;
+i = 0;
+int sum;
+sum = 0;
+while (i < _n) {
+  int x;
+  x = read_int();
+  sum = sum + x;
+}
+print_int(sum);
+
+\end{verbatim}
+On the first line, \texttt{int \_n;}, there is a lexical error since \texttt{\_n} cannot be classified as a token.
+On the second line, \texttt{\_n = read\_int(); // wrong comment}, there is another lexical error since \texttt{/} is not part of the alphabet.
+\end{document}
