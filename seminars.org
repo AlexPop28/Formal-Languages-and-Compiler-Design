@@ -1,4 +1,7 @@
+#+TITLE: Seminar notes - Formal Languages and Compiler Design
+#+AUTHOR: Alex Pop
 * Seminar 1
+<2023-10-09 Mon>
 ** Ex 1
 <letter> ::= a | b | c | ... | A | B | ... | Z
 <sequence_of_letters> ::= <letter> | <letter><sequence_of_letters>
@@ -15,3 +18,93 @@
 non_zero_digit = "1" | "2" | ... | "9"
 digit = "0" | non_zero_digit
 integer = "0" | ["+" | "-"]non_zero_digit{digit}
+
+* Seminar 2 - Scanning
+<2023-10-16 Mon>
+input:
+  + =source.txt=
+    #+BEGIN_SRC pascal
+    VAR a:integer;
+        b:integer;
+        c:string;
+    BEGIN
+        a := 12;
+        b := a + 5;
+        c := "A message";
+        WRITE("b=");
+        WRITE(b);
+    END
+    #+END_SRC
+  + /tokens list/
+output:
+  + PIF (program internal form)
+  + ST (symbol table)
+  + lexical errors (if any)
+
+PIF
+#+CAPTION: PIF Table for =source.txt=
+|---------+--------|
+| token   | st_pos |
+|---------+--------|
+| VAR     |     -1 |
+| id      |      0 |
+| :       |     -1 |
+| integer |     -1 |
+| ;       |     -1 |
+| id      |      1 |
+| :       |     -1 |
+| integer |     -1 |
+| ;       |     -1 |
+| id      |      2 |
+| :       |     -1 |
+| string  |     -1 |
+| ;       |     -1 |
+| BEGIN   |     -1 |
+| id      |      0 |
+| :=      |     -1 |
+| cons    |      3 |
+| ;       |     -1 |
+| id      |      1 |
+| :=      |     -1 |
+| id      |      0 |
+| +       |     -1 |
+| cons    |      4 |
+| ;       |     -1 |
+| id      |      2 |
+| :=      |     -1 |
+| cons    |      5 |
+| ;       |     -1 |
+| WRITE   |     -1 |
+| (       |     -1 |
+| cons    |      6 |
+| )       |     -1 |
+| ;       |     -1 |
+| WRITE   |     -1 |
+| (       |     -1 |
+| id      |      1 |
+| )       |     -1 |
+| ;       |     -1 |
+| END     |     -1 |
+
+
+ST - only identifiers and constants
+#+CAPTION: Symbol Table for =source.txt=
+|--------+-------------|
+| st_pos | symbol      |
+|--------+-------------|
+|      0 | a           |
+|      1 | b           |
+|      2 | c           |
+|      3 | 12          |
+|      4 | 5           |
+|      5 | "A message" |
+|      6 | "b="        |
+
+** Lexical errors
+*** Examples:
++ =@= - illegal alphabet symbol
++ ="a= - illegal string constant
++ ='ab'=, ='a=, ='b=, =''= - illegal char constant
++ =1a= - illegal identifier
+
+
