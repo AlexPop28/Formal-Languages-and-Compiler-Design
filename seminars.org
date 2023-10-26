@@ -43,7 +43,6 @@ output:
 
 PIF
 #+CAPTION: PIF Table for =source.txt=
-|---------+--------|
 | token   | st_pos |
 |---------+--------|
 | VAR     |     -1 |
@@ -89,7 +88,6 @@ PIF
 
 ST - only identifiers and constants
 #+CAPTION: Symbol Table for =source.txt=
-|--------+-------------|
 | st_pos | symbol      |
 |--------+-------------|
 |      0 | a           |
@@ -107,4 +105,17 @@ ST - only identifiers and constants
 + ='ab'=, ='a=, ='b=, =''= - illegal char constant
 + =1a= - illegal identifier
 
+* Seminar 3
+** Grammar
+$G = (N, \sigma, P, S)$
+** Ex 2
+\begin{align*}
+G = (N, \sigma, P, S)
+N = \{S\}
+\sigma = \{a, b, c\}
+P : S \rightarrow a^2S | bc\}
+\end{align*}
 
+$L(G) = \{a^{2n}bc | n \in \mathbb{N}\}
+
+Proof by induction by double inclusion (see seminar notes on Teams).
