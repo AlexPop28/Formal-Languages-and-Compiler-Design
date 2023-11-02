@@ -36,7 +36,7 @@ open Import
 (*   | _ -> Or_error.error_string "Lexical error" *)
 
 let detect_token ~separators ~operators ~reserved_words ~constants ~identifiers
-    ~program =
+    ~program ~line_number =
   let f regex = Re2.matches regex program in
   let get_match regex =
     (Re2.find_submatches_exn regex program).(1) |> Option.value_exn
@@ -55,7 +55,10 @@ let detect_token ~separators ~operators ~reserved_words ~constants ~identifiers
               | None -> (
                   match List.find identifiers ~f with
                   | Some regex -> get_match regex |> Token.Identifier |> Ok
-                  | None -> Or_error.error_string "Lexical error"))))
+                  | None ->
+                      Or_error.error_string
+                        [%string
+                          "Lexical error at %{line_number#Int}: %{program}"]))))
 
 let scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
     =
@@ -70,7 +73,7 @@ let scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
     | line ->
         let%bind.Or_error token =
           detect_token ~separators ~operators ~reserved_words ~constants
-            ~identifiers ~program:line
+            ~identifiers ~program:line ~line_number
         in
         (* print_s [%message (line : string) (token : Token.t)]; *)
         let token =
@@ -87,10 +90,11 @@ let scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
               Pif.add pif ~token:"const" ~st_pos;
               constant
         in
-        process_line (line_number + 1)
-          (String.drop_prefix line (String.length token))
+        process_line line_number (String.drop_prefix line (String.length token))
   in
   let%bind.Or_error () =
-    String.split_lines program |> List.mapi ~f:process_line |> Or_error.all_unit
+    String.split_lines program
+    |> List.mapi ~f:(fun i line -> process_line (i + 1) line)
+    |> Or_error.all_unit
   in
   Ok (st, pif)
