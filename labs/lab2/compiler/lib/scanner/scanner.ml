@@ -1,14 +1,5 @@
 open! Core
-
-module Token = struct
-  type t =
-    | Reserved_word of string
-    | Separator of string
-    | Operator of string
-    | Constant of string
-    | Identifier of string
-  [@@deriving sexp]
-end
+open Import
 
 (* let detect_token ~separators ~operators ~reserved_words ~constants ~identifiers *)
 (*     ~program = *)
@@ -81,9 +72,9 @@ let scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
           detect_token ~separators ~operators ~reserved_words ~constants
             ~identifiers ~program:line
         in
-        print_s [%message (line : string) (token : Token.t)];
+        (* print_s [%message (line : string) (token : Token.t)]; *)
         let token =
-          match token with
+          match (token : Pif.Token.t) with
           | Reserved_word token | Separator token | Operator token ->
               Pif.add pif ~token ~st_pos:(-1);
               token

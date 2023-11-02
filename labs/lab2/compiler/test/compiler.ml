@@ -21,7 +21,7 @@ let%expect_test "test symbol table operations" =
   print_s [%message (symbol_not_found : string option)];
   [%expect {| (symbol_not_found ()) |}]
 
-let%expect_test "test scanner" =
+let scan =
   let operators = "\\+|\\-|\\*|/|%|==|<=|<|>=|>|=|!=" in
   let separators = "[{}(); ]|$" in
   let append_operator_or_separator pattern =
@@ -42,19 +42,184 @@ let%expect_test "test scanner" =
       ~f:(fun s -> append_operator_or_separator s |> Re2.create_exn)
       [ int_constant; double_constant; str_constant ]
   in
-  let identifiers = "([a-z_][a-z0-9_]*)" |> append_operator_or_separator in
+  let identifiers = "^([a-z][a-z0-9_]*)" |> append_operator_or_separator in
   let identifiers = [ Re2.create_exn identifiers ] in
-  let scan =
-    Scanner.scan ~separators ~operators ~reserved_words ~constants ~identifiers
-  in
+  Scanner.scan ~separators ~operators ~reserved_words ~constants ~identifiers
+
+let%expect_test "test scanner easy input" =
   let result = scan ~program:"int a;" in
   let st, pif = Or_error.ok_exn result in
-  print_s [%message (pif : Pif.t)];
-  [%expect
-    {|
-    ((line "int a;") (token (Reserved_word int)))
-    ((line "a;") (token (Identifier a)))
-    ((line ";") (token (Separator ";")))
-    (pif ((";" -1) (id 97) (int -1))) |}];
+  let pif = Pif.to_list pif in
+  print_s [%message (pif : (string * int) list)];
+  [%expect {|
+    (pif ((int -1) (id 97) (";" -1))) |}];
   print_s [%message (Symbol_table.get_symbol st 97 : string option)];
   [%expect {| ("Symbol_table.get_symbol st 97" (a)) |}]
+
+let%expect_test "test scanner p1 lab1" =
+  let result =
+    scan
+      ~program:
+        {|
+int a;
+int b;
+int c;
+a = read_int();
+b = read_int();
+c = read_int();
+int ans;
+ans = a;
+if (b > ans) {
+  ans = b
+}
+if (c > ans) {
+  ans = c;
+}
+print_int(ans);
+|}
+  in
+  let st, pif = Or_error.ok_exn result in
+  let pif = Pif.to_list pif in
+  print_s [%message (pif : (string * int) list)];
+  [%expect
+    {|
+    (pif
+     ((int -1) (id 97) (";" -1) (int -1) (id 98) (";" -1) (int -1) (id 99)
+      (";" -1) (id 97) (= -1) (read_int -1) ("(" -1) (")" -1) (";" -1) (id 98)
+      (= -1) (read_int -1) ("(" -1) (")" -1) (";" -1) (id 99) (= -1)
+      (read_int -1) ("(" -1) (")" -1) (";" -1) (int -1) (id 441021) (";" -1)
+      (id 441021) (= -1) (id 97) (";" -1) (if -1) ("(" -1) (id 98) (> -1)
+      (id 441021) (")" -1) ({ -1) (id 441021) (= -1) (id 98) (} -1) (if -1)
+      ("(" -1) (id 99) (> -1) (id 441021) (")" -1) ({ -1) (id 441021) (= -1)
+      (id 99) (";" -1) (} -1) (print_int -1) ("(" -1) (id 441021) (")" -1)
+      (";" -1))) |}];
+  print_s [%message (Symbol_table.get_symbol st 97 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 97" (a)) |}];
+  print_s [%message (Symbol_table.get_symbol st 98 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 98" (b)) |}];
+  print_s [%message (Symbol_table.get_symbol st 99 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 99" (c)) |}];
+  print_s [%message (Symbol_table.get_symbol st 441021 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 441021" (ans)) |}]
+
+let%expect_test "test scanner p2 lab1" =
+  let result =
+    scan
+      ~program:
+        {|
+int n;
+n = read_int();
+int prime;
+prime = 1;
+int d;
+d = 2;
+while (d < n) {
+  if (n % d == 0) {
+    prime = 0;
+  }
+  d = d + 1;
+}
+if (prime == 0) {
+  print_str("not prime")
+} else {
+  print_str("prime")
+}
+|}
+  in
+  let st, pif = Or_error.ok_exn result in
+  let pif = Pif.to_list pif in
+  print_s [%message (pif : (string * int) list)];
+  [%expect
+    {|
+    (pif
+     ((int -1) (id 110) (";" -1) (id 110) (= -1) (read_int -1) ("(" -1) (")" -1)
+      (";" -1) (int -1) (id 196883) (";" -1) (id 196883) (= -1) (const 49)
+      (";" -1) (int -1) (id 100) (";" -1) (id 100) (= -1) (const 50) (";" -1)
+      (while -1) ("(" -1) (id 100) (< -1) (id 110) (")" -1) ({ -1) (if -1)
+      ("(" -1) (id 110) (% -1) (id 100) (== -1) (const 48) (")" -1) ({ -1)
+      (id 196883) (= -1) (const 48) (";" -1) (} -1) (id 100) (= -1) (id 100)
+      (+ -1) (const 49) (";" -1) (} -1) (if -1) ("(" -1) (id 196883) (== -1)
+      (const 48) (")" -1) ({ -1) (print_str -1) ("(" -1) (const 649405) (")" -1)
+      (} -1) (else -1) ({ -1) (print_str -1) ("(" -1) (const 483306) (")" -1)
+      (} -1))) |}];
+  print_s [%message (Symbol_table.get_symbol st 110 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 110" (n)) |}];
+  print_s [%message (Symbol_table.get_symbol st 196883 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 196883" (prime)) |}];
+  print_s [%message (Symbol_table.get_symbol st 49 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 49" (1)) |}];
+  print_s [%message (Symbol_table.get_symbol st 100 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 100" (d)) |}];
+  print_s [%message (Symbol_table.get_symbol st 50 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 50" (2)) |}];
+  print_s [%message (Symbol_table.get_symbol st 48 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 48" (0)) |}]
+
+let%expect_test "test scanner p3 lab 1" =
+  let result =
+    scan
+      ~program:
+        {|
+int n;
+n = read_int();
+int i;
+i = 0;
+int sum;
+sum = 0;
+while (i < n) {
+  int x;
+  x = read_int();
+  sum = sum + x;
+}
+print_int(sum);
+|}
+  in
+  let st, pif = Or_error.ok_exn result in
+  let pif = Pif.to_list pif in
+  print_s [%message (pif : (string * int) list)];
+  [%expect
+    {|
+    (pif
+     ((int -1) (id 110) (";" -1) (id 110) (= -1) (read_int -1) ("(" -1) (")" -1)
+      (";" -1) (int -1) (id 105) (";" -1) (id 105) (= -1) (const 48) (";" -1)
+      (int -1) (id 299670) (";" -1) (id 299670) (= -1) (const 48) (";" -1)
+      (while -1) ("(" -1) (id 105) (< -1) (id 110) (")" -1) ({ -1) (int -1)
+      (id 120) (";" -1) (id 120) (= -1) (read_int -1) ("(" -1) (")" -1) (";" -1)
+      (id 299670) (= -1) (id 299670) (+ -1) (id 120) (";" -1) (} -1)
+      (print_int -1) ("(" -1) (id 299670) (")" -1) (";" -1))) |}];
+  print_s [%message (Symbol_table.get_symbol st 110 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 110" (n)) |}];
+  print_s [%message (Symbol_table.get_symbol st 105 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 105" (i)) |}];
+  print_s [%message (Symbol_table.get_symbol st 48 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 48" (0)) |}];
+  print_s [%message (Symbol_table.get_symbol st 120 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 120" (x)) |}];
+  print_s [%message (Symbol_table.get_symbol st 299670 : string option)];
+  [%expect {| ("Symbol_table.get_symbol st 299670" (sum)) |}]
+
+let%expect_test "test scanner p1err lab 1" =
+  let result =
+    scan
+      ~program:
+        {|
+int _n;
+_n = read_int();
+int i; # wrong comment
+i = 0;
+int sum;
+sum = 0;
+while (i < _n) {
+  int x;
+  x = read_int();
+  sum = sum + x;
+}
+print_int(sum);
+
+|}
+  in
+  print_s [%message (result : (Symbol_table.t * Pif.t) Or_error.t)];
+  [%expect
+    {|
+      (result
+       (Error ("Lexical error" "Lexical error" "Lexical error" "Lexical error"))) |}]
