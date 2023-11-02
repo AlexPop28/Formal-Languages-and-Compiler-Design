@@ -1,6 +1,6 @@
 open! Core
 
-type t
+type t [@@deriving sexp]
 
 val create : unit -> t
 val add : t -> string -> int

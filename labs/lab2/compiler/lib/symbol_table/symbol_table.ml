@@ -1,4 +1,4 @@
-type t = Indexed_hashset.t
+type t = Indexed_hashset.t [@@deriving sexp]
 
 let create = Indexed_hashset.create
 let add_symbol = Indexed_hashset.add

@@ -1,6 +1,6 @@
 open! Core
 
-type t = string option array
+type t = string option array [@@deriving sexp]
 
 let size = 666_013
 let create () = Array.init size ~f:(fun _ -> None)
