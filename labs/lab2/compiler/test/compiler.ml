@@ -14,12 +14,16 @@ let%expect_test "test symbol table operations" =
   let symbol_2 = Symbol_table.get_symbol t index_2 in
   print_s [%message (symbol_2 : string option)];
   [%expect {| (symbol_2 (2)) |}];
-  let symbol_test = Symbol_table.get_symbol t index_2 in
+  let symbol_test = Symbol_table.get_symbol t index_test in
   print_s [%message (symbol_test : string option)];
-  [%expect {| (symbol_test (2)) |}];
+  [%expect {| (symbol_test (test)) |}];
   let symbol_not_found = Symbol_table.get_symbol t 0 in
   print_s [%message (symbol_not_found : string option)];
-  [%expect {| (symbol_not_found ()) |}]
+  [%expect {| (symbol_not_found ()) |}];
+  print_string (Symbol_table.to_hum t);
+  [%expect {|
+    50: 2
+    358850: test |}]
 
 let scan =
   let operators = "\\+|\\-|\\*|/|%|==|<=|<|>=|>|=|!=" in
@@ -93,14 +97,12 @@ print_int(ans);
       ("(" -1) (id 99) (> -1) (id 441021) (")" -1) ({ -1) (id 441021) (= -1)
       (id 99) (";" -1) (} -1) (print_int -1) ("(" -1) (id 441021) (")" -1)
       (";" -1))) |}];
-  print_s [%message (Symbol_table.get_symbol st 97 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 97" (a)) |}];
-  print_s [%message (Symbol_table.get_symbol st 98 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 98" (b)) |}];
-  print_s [%message (Symbol_table.get_symbol st 99 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 99" (c)) |}];
-  print_s [%message (Symbol_table.get_symbol st 441021 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 441021" (ans)) |}]
+  print_string (Symbol_table.to_hum st);
+  [%expect {|
+    97: a
+    98: b
+    99: c
+    441021: ans |}]
 
 let%expect_test "test scanner p2 lab1" =
   let result =
@@ -142,18 +144,16 @@ if (prime == 0) {
       (const 48) (")" -1) ({ -1) (print_str -1) ("(" -1) (const 649405) (")" -1)
       (} -1) (else -1) ({ -1) (print_str -1) ("(" -1) (const 483306) (")" -1)
       (} -1))) |}];
-  print_s [%message (Symbol_table.get_symbol st 110 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 110" (n)) |}];
-  print_s [%message (Symbol_table.get_symbol st 196883 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 196883" (prime)) |}];
-  print_s [%message (Symbol_table.get_symbol st 49 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 49" (1)) |}];
-  print_s [%message (Symbol_table.get_symbol st 100 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 100" (d)) |}];
-  print_s [%message (Symbol_table.get_symbol st 50 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 50" (2)) |}];
-  print_s [%message (Symbol_table.get_symbol st 48 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 48" (0)) |}]
+  print_string (Symbol_table.to_hum st);
+  [%expect {|
+    48: 0
+    49: 1
+    50: 2
+    100: d
+    110: n
+    196883: prime
+    483306: "prime"
+    649405: "not prime" |}]
 
 let%expect_test "test scanner p3 lab 1" =
   let result =
@@ -187,16 +187,13 @@ print_int(sum);
       (id 120) (";" -1) (id 120) (= -1) (read_int -1) ("(" -1) (")" -1) (";" -1)
       (id 299670) (= -1) (id 299670) (+ -1) (id 120) (";" -1) (} -1)
       (print_int -1) ("(" -1) (id 299670) (")" -1) (";" -1))) |}];
-  print_s [%message (Symbol_table.get_symbol st 110 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 110" (n)) |}];
-  print_s [%message (Symbol_table.get_symbol st 105 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 105" (i)) |}];
-  print_s [%message (Symbol_table.get_symbol st 48 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 48" (0)) |}];
-  print_s [%message (Symbol_table.get_symbol st 120 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 120" (x)) |}];
-  print_s [%message (Symbol_table.get_symbol st 299670 : string option)];
-  [%expect {| ("Symbol_table.get_symbol st 299670" (sum)) |}]
+  print_string (Symbol_table.to_hum st);
+  [%expect {|
+    48: 0
+    105: i
+    110: n
+    120: x
+    299670: sum |}]
 
 let%expect_test "test scanner p1err lab 1" =
   let result =
