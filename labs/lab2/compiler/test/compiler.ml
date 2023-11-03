@@ -25,7 +25,7 @@ let%expect_test "test symbol table operations" =
     50: 2
     358850: test |}]
 
-let create () : Scanner.Tokens_data.t =
+let create_tokens_data () : Scanner.Tokens_data.t =
   {
     operators =
       [ "+"; "-"; "*"; "/"; "%"; "=="; "<="; "<"; ">="; ">"; "="; "!=" ];
@@ -50,11 +50,11 @@ let create () : Scanner.Tokens_data.t =
   }
 
 let%expect_test "" =
-  let tt = create () in
-  print_s [%message (tt : Scanner.Tokens_data.t)];
+  let tokens_data = create_tokens_data () in
+  print_s [%message (tokens_data : Scanner.Tokens_data.t)];
   [%expect
     {|
-    (tt
+    (tokens_data
      ((operators (+ - * / % == <= < >= > = !=))
       (separators ({ } "(" ")" ";" " " $))
       (reserved_words
@@ -68,11 +68,11 @@ let%expect_test "" =
        (int str double if else while get set read_int read_str read_double
         print_int print_str print_double))) |}
   in
-  let tt = Scanner.Tokens_data.t_of_sexp (Sexp.of_string sexp) in
-  print_s [%message (tt : Scanner.Tokens_data.t)];
+  let tokens_data = Scanner.Tokens_data.t_of_sexp (Sexp.of_string sexp) in
+  print_s [%message (tokens_data : Scanner.Tokens_data.t)];
   [%expect
     {|
-    (tt
+    (tokens_data
      ((operators (+ - * / % == <= < >= > = !=))
       (separators ({ } "(" ")" ";" " " $))
       (reserved_words
@@ -80,7 +80,7 @@ let%expect_test "" =
         print_int print_str print_double)))) |}]
 
 let%expect_test "test parsing tokens.in" =
-  let t = create () in
+  let t = create_tokens_data () in
   let wrap_each_char s =
     let wrapped = ref "" in
     String.iter s ~f:(fun c ->
@@ -104,32 +104,13 @@ let%expect_test "test parsing tokens.in" =
     "^(int|str|double|if|else|while|get|set|read_int|read_str|read_double|print_int|print_str|print_double)"]
 
 let scan =
-  let operators =
-    "[+]|[-]|[*]|[/]|[%]|[=][=]|[<][=]|[<]|[>][=]|[>]|[=]|[!][=]"
-  in
-  let separators = "[{]|[}]|[(]|[)]|[;]|[ ]|$" in
-  (* let separators = "[{}(); ]|$" in *)
-  let append_operator_or_separator pattern =
-    pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"
-  in
-  let reserved_words =
-    "^(int|str|double|if|else|while|get|set|read_int|read_str|read_double|print_int|print_str|print_double)"
-    |> append_operator_or_separator
-  in
-  let reserved_words = [ Re2.create_exn reserved_words ] in
-  let operators = [ Re2.create_exn ("^(" ^ operators ^ ")") ] in
-  let separators = [ Re2.create_exn ("^(" ^ separators ^ ")") ] in
+  let tokens_data = create_tokens_data () in
   let int_constant = "^(0|[+-]?[1-9][0-9]*)" in
   let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in
   let str_constant = "^(\"[^\"]*\")" in
-  let constants =
-    List.map
-      ~f:(fun s -> append_operator_or_separator s |> Re2.create_exn)
-      [ int_constant; double_constant; str_constant ]
-  in
-  let identifiers = "^([a-z][a-z0-9_]*)" |> append_operator_or_separator in
-  let identifiers = [ Re2.create_exn identifiers ] in
-  Scanner.scan ~separators ~operators ~reserved_words ~constants ~identifiers
+  let constants = [ int_constant; double_constant; str_constant ] in
+  let identifiers = [ "^([a-z][a-z0-9_]*)" ] in
+  Scanner.scan_with_tokens_data ~tokens_data ~constants ~identifiers
 
 let%expect_test "test scanner easy input" =
   let result = scan ~program:"int a;" in

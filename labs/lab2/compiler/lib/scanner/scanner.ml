@@ -84,10 +84,10 @@ let scan_with_tokens_data ~constants ~identifiers ~(tokens_data : Tokens_data.t)
   in
   let reduce = List.reduce_exn ~f:(fun acc op -> acc ^ "|" ^ op) in
 
-  let operators = List.map tokens_data.operators ~f:wrap_each_char in
-  let operators = reduce operators in
-  let separators = List.map tokens_data.separators ~f:wrap_each_char in
-  let separators = reduce separators in
+  let operators = List.map tokens_data.operators ~f:wrap_each_char |> reduce in
+  let separators =
+    List.map tokens_data.separators ~f:wrap_each_char |> reduce
+  in
   let append_operator_or_separator pattern =
     pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"
   in
@@ -98,4 +98,14 @@ let scan_with_tokens_data ~constants ~identifiers ~(tokens_data : Tokens_data.t)
   let reserved_words = [ Re2.create_exn reserved_words ] in
   let operators = [ Re2.create_exn ("^(" ^ operators ^ ")") ] in
   let separators = [ Re2.create_exn ("^(" ^ separators ^ ")") ] in
+  let append_operator_or_separator_and_compile s =
+    append_operator_or_separator s |> Re2.create_exn
+  in
+
+  let constants =
+    List.map ~f:append_operator_or_separator_and_compile constants
+  in
+  let identifiers =
+    List.map identifiers ~f:append_operator_or_separator_and_compile
+  in
   scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program

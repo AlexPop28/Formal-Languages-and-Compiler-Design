@@ -1,36 +1,45 @@
 open! Core
 
 let scan =
-  let operators =
-    "[+]|[-]|[*]|[/]|[%]|[=][=]|[<][=]|[<]|[>][=]|[>]|[=]|[!][=]"
-  in
-  (* let operators = "\\+|\\-|\\*|/|%|==|<=|<|>=|>|=|!=" in *)
-  let separators = "[{}(); ]|$" in
-  let append_operator_or_separator pattern =
-    pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"
-  in
-  let reserved_words =
-    "^(int|str|double|if|else|while|get|set|read_int|read_str|read_double|print_int|print_str|print_double)"
-    |> append_operator_or_separator
-  in
-  let reserved_words = [ Re2.create_exn reserved_words ] in
-  let operators = [ Re2.create_exn ("^(" ^ operators ^ ")") ] in
-  let separators = [ Re2.create_exn ("^(" ^ separators ^ ")") ] in
   let int_constant = "^(0|[+-]?[1-9][0-9]*)" in
   let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in
   let str_constant = "^(\"[^\"]*\")" in
-  let constants =
-    List.map
-      ~f:(fun s -> append_operator_or_separator s |> Re2.create_exn)
-      [ int_constant; double_constant; str_constant ]
-  in
-  let identifiers = "^([a-z][a-z0-9_]*)" |> append_operator_or_separator in
-  let identifiers = [ Re2.create_exn identifiers ] in
-  Scanner.scan ~separators ~operators ~reserved_words ~constants ~identifiers
+  let constants = [ int_constant; double_constant; str_constant ] in
+  let identifiers = [ "^([a-z][a-z0-9_]*)" ] in
+  Scanner.scan_with_tokens_data ~constants ~identifiers
+
+(* let scan = *)
+(*   let operators = *)
+(*     "[+]|[-]|[*]|[/]|[%]|[=][=]|[<][=]|[<]|[>][=]|[>]|[=]|[!][=]" *)
+(*   in *)
+(*   (\* let operators = "\\+|\\-|\\*|/|%|==|<=|<|>=|>|=|!=" in *\) *)
+(*   let separators = "[{}(); ]|$" in *)
+(*   let append_operator_or_separator pattern = *)
+(*     pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")" *)
+(*   in *)
+(*   let reserved_words = *)
+(*     "^(int|str|double|if|else|while|get|set|read_int|read_str|read_double|print_int|print_str|print_double)" *)
+(*     |> append_operator_or_separator *)
+(*   in *)
+(*   let reserved_words = [ Re2.create_exn reserved_words ] in *)
+(*   let operators = [ Re2.create_exn ("^(" ^ operators ^ ")") ] in *)
+(*   let separators = [ Re2.create_exn ("^(" ^ separators ^ ")") ] in *)
+(*   let int_constant = "^(0|[+-]?[1-9][0-9]*\)" in *)
+(*   let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in *)
+(*   let str_constant = "^(\"[^\"]*\")" in *)
+(*   let constants = *)
+(*     List.map *)
+(*       ~f:(fun s -> append_operator_or_separator s |> Re2.create_exn) *)
+(*       [ int_constant; double_constant; str_constant ] *)
+(*   in *)
+(*   let identifiers = "^([a-z][a-z0-9_]*\)" |> append_operator_or_separator in *)
+(*   let identifiers = [ Re2.create_exn identifiers ] in *)
+(*   Scanner.scan ~separators ~operators ~reserved_words ~constants ~identifiers *)
 
 let command =
   Command.basic_or_error ~summary:"Run lexical analysis on a source code file"
     (let%map_open.Command file = anon ("filename" %: Filename_unix.arg_type)
+     and tokens_file = anon ("tokens_file" %: Filename_unix.arg_type)
      and st_out = anon ("symbol_table_output_file" %: Filename_unix.arg_type)
      and pif_out =
        anon ("program_internal_form_output_file" %: Filename_unix.arg_type)
@@ -38,7 +47,11 @@ let command =
 
      fun () ->
        let program = In_channel.read_all file in
-       let%map.Or_error st, pif = scan ~program in
+       let tokens_data =
+         In_channel.read_all tokens_file
+         |> Sexp.of_string |> Scanner.Tokens_data.t_of_sexp
+       in
+       let%map.Or_error st, pif = scan ~tokens_data ~program in
        Out_channel.write_all st_out ~data:(Symbol_table.to_hum st);
        Out_channel.write_all pif_out ~data:(Pif.to_hum pif);
        print_endline "Lexically correct")

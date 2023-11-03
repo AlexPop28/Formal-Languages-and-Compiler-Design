@@ -28,8 +28,9 @@ val scan :
     [reserved_words]. *)
 
 val scan_with_tokens_data :
-  constants:Re2.t list ->
-  identifiers:Re2.t list ->
+  constants:string list ->
+  identifiers:string list ->
   tokens_data:Tokens_data.t ->
   program:string ->
   (Symbol_table.t * Pif.t) Or_error.t
+(** [constants] and [identifiers] contain string representations of the regular expressions to be enhanced and compiled. *)
