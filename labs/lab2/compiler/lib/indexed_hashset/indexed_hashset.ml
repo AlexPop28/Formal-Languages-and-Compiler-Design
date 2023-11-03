@@ -38,7 +38,7 @@ let get_by_index t index =
   if index < 0 || index >= size then None else t.(index)
 
 let array_to_string arr =
-  let buffer = Buffer.create 16 in
+  let buffer = Buffer.create 1024 in
   Array.iter
     ~f:(fun (int_val, str_val) ->
       Buffer.add_string buffer (string_of_int int_val);

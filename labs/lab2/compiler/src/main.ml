@@ -27,10 +27,17 @@ let scan =
 
 let command =
   Command.basic_or_error ~summary:"Run lexical analysis on a source code file"
-    (let%map_open.Command file = anon ("filename" %: Filename_unix.arg_type) in
+    (let%map_open.Command file = anon ("filename" %: Filename_unix.arg_type)
+     and st_out = anon ("symbol_table_output_file" %: Filename_unix.arg_type)
+     and pif_out =
+       anon ("program_internal_form_output_file" %: Filename_unix.arg_type)
+     in
+
      fun () ->
        let program = In_channel.read_all file in
-       let%map.Or_error st, _pif = scan ~program in
-       Out_channel.write_all "st.out" ~data:(Symbol_table.to_hum st))
+       let%map.Or_error st, pif = scan ~program in
+       Out_channel.write_all st_out ~data:(Symbol_table.to_hum st);
+       Out_channel.write_all pif_out ~data:(Pif.to_hum pif);
+       print_endline "Lexically correct")
 
 let () = Command_unix.run command

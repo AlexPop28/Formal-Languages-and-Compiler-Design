@@ -15,3 +15,4 @@ type t [@@deriving sexp]
 val create : unit -> t
 val add : t -> token:string -> st_pos:int -> unit
 val to_list : t -> (string * int) list
+val to_hum : t -> string

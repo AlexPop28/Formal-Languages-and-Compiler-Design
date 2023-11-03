@@ -1,0 +1,254 @@
+#+TITLE: Lab 3 documentation
+#+AUTHOR: Alex Pop
+https://github.com/AlexPop28/Formal-Languages-and-Compiler-Design/pull/1
+
+* P1
+#+BEGIN_SRC
+../lab2/compiler/_build/default/src/main.exe p1.c st1.out pif1.out
+Lexically correct
+#+END_SRC
+
+** =st.out=
+#+BEGIN_SRC
+97: a
+98: b
+99: c
+441021: ans
+#+END_SRC
+
+** =pif.out=
+#+BEGIN_SRC
+-1: int
+97: id
+-1: ;
+-1: int
+98: id
+-1: ;
+-1: int
+99: id
+-1: ;
+97: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+98: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+99: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+-1: int
+441021: id
+-1: ;
+441021: id
+-1: =
+97: id
+-1: ;
+-1: if
+-1: (
+98: id
+-1: >
+441021: id
+-1: )
+-1: {
+441021: id
+-1: =
+98: id
+-1: }
+-1: if
+-1: (
+99: id
+-1: >
+441021: id
+-1: )
+-1: {
+441021: id
+-1: =
+99: id
+-1: ;
+-1: }
+-1: print_int
+-1: (
+441021: id
+-1: )
+-1: ;
+#+END_SRC
+
+* P2
+#+BEGIN_SRC
+../lab2/compiler/_build/default/src/main.exe p2.c st2.out pif2.out
+Lexically correct
+#+END_SRC
+
+** =st.out=
+#+BEGIN_SRC
+48: 0
+49: 1
+50: 2
+100: d
+110: n
+196883: prime
+483306: "prime"
+649405: "not prime"
+#+END_SRC
+
+** =pif.out=
+#+BEGIN_SRC
+-1: int
+110: id
+-1: ;
+110: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+-1: int
+196883: id
+-1: ;
+196883: id
+-1: =
+49: const
+-1: ;
+-1: int
+100: id
+-1: ;
+100: id
+-1: =
+50: const
+-1: ;
+-1: while
+-1: (
+100: id
+-1: <
+110: id
+-1: )
+-1: {
+-1: if
+-1: (
+110: id
+-1: %
+100: id
+-1: ==
+48: const
+-1: )
+-1: {
+196883: id
+-1: =
+48: const
+-1: ;
+-1: }
+100: id
+-1: =
+100: id
+-1: +
+49: const
+-1: ;
+-1: }
+-1: if
+-1: (
+196883: id
+-1: ==
+48: const
+-1: )
+-1: {
+-1: print_str
+-1: (
+649405: const
+-1: )
+-1: }
+-1: else
+-1: {
+-1: print_str
+-1: (
+483306: const
+-1: )
+-1: }
+#+END_SRC
+
+
+* P3
+#+BEGIN_SRC
+../lab2/compiler/_build/default/src/main.exe p3.c st3.out pif3.out
+Lexically correct
+#+END_SRC
+
+** =st.out=
+#+BEGIN_SRC
+48: 0
+105: i
+110: n
+120: x
+299670: sum
+#+END_SRC
+
+** =pif.out=
+#+BEGIN_SRC
+-1: int
+110: id
+-1: ;
+110: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+-1: int
+105: id
+-1: ;
+105: id
+-1: =
+48: const
+-1: ;
+-1: int
+299670: id
+-1: ;
+299670: id
+-1: =
+48: const
+-1: ;
+-1: while
+-1: (
+105: id
+-1: <
+110: id
+-1: )
+-1: {
+-1: int
+120: id
+-1: ;
+120: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+299670: id
+-1: =
+299670: id
+-1: +
+120: id
+-1: ;
+-1: }
+-1: print_int
+-1: (
+299670: id
+-1: )
+-1: ;
+#+END_SRC
+
+* P1err
+#+BEGIN_SRC
+../lab2/compiler/_build/default/src/main.exe p1err.c st1err.out pif1err.out
+("Lexical error at line 1: _n;"
+ "Lexical error at line 2: _n = read_int(); # wrong comment"
+ "Lexical error at line 7: _n) {")
+ #+END_SRC

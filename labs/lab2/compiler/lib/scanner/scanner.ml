@@ -58,7 +58,8 @@ let detect_token ~separators ~operators ~reserved_words ~constants ~identifiers
                   | None ->
                       Or_error.error_string
                         [%string
-                          "Lexical error at %{line_number#Int}: %{program}"]))))
+                          "Lexical error at line %{line_number#Int}: %{program}"]
+                  ))))
 
 let scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
     =

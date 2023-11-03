@@ -1,5 +1,5 @@
 int _n;
-_n = read_int(); // wrong comment
+_n = read_int(); # wrong comment
 int i;
 i = 0;
 int sum;
