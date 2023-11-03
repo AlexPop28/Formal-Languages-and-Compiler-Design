@@ -1,5 +1,14 @@
 open! Core
 
+module Tokens_data : sig
+  type t = {
+    operators : string list;
+    separators : string list;
+    reserved_words : string list;
+  }
+  [@@deriving sexp]
+end
+
 val scan :
   separators:Re2.t list ->
   operators:Re2.t list ->
@@ -17,3 +26,10 @@ val scan :
 
     [constants] and [identifiers] should be constructed in a similar manner to
     [reserved_words]. *)
+
+val scan_with_tokens_data :
+  constants:Re2.t list ->
+  identifiers:Re2.t list ->
+  tokens_data:Tokens_data.t ->
+  program:string ->
+  (Symbol_table.t * Pif.t) Or_error.t

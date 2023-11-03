@@ -1,6 +1,16 @@
 open! Core
 open Import
 
+module Tokens_data = struct
+  type t = {
+    operators : string list;
+    separators : string list;
+    reserved_words : string list;
+  }
+  [@@deriving sexp]
+  (** Plain text representation of operators, separators and reserved words. End of line separators denoted as $. *)
+end
+
 let detect_token ~separators ~operators ~reserved_words ~constants ~identifiers
     ~program ~line_number =
   let f regex = Re2.matches regex program in
@@ -62,3 +72,30 @@ let scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
     |> Or_error.all_unit
   in
   Ok (st, pif)
+
+let scan_with_tokens_data ~constants ~identifiers ~(tokens_data : Tokens_data.t)
+    ~program =
+  let wrap_each_char s =
+    let wrapped = ref "" in
+    String.iter s ~f:(fun c ->
+        if Char.(c = '$') then wrapped := String.of_char c
+        else wrapped := !wrapped ^ "[" ^ String.of_char c ^ "]");
+    !wrapped
+  in
+  let reduce = List.reduce_exn ~f:(fun acc op -> acc ^ "|" ^ op) in
+
+  let operators = List.map tokens_data.operators ~f:wrap_each_char in
+  let operators = reduce operators in
+  let separators = List.map tokens_data.separators ~f:wrap_each_char in
+  let separators = reduce separators in
+  let append_operator_or_separator pattern =
+    pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"
+  in
+  let reserved_words =
+    "^(" ^ reduce tokens_data.reserved_words ^ ")"
+    |> append_operator_or_separator
+  in
+  let reserved_words = [ Re2.create_exn reserved_words ] in
+  let operators = [ Re2.create_exn ("^(" ^ operators ^ ")") ] in
+  let separators = [ Re2.create_exn ("^(" ^ separators ^ ")") ] in
+  scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program

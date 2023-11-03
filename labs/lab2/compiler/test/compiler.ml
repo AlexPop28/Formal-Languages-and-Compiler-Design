@@ -25,14 +25,7 @@ let%expect_test "test symbol table operations" =
     50: 2
     358850: test |}]
 
-type tt = {
-  operators : string list;
-  separators : string list;
-  reserved_words : string list;
-}
-[@@deriving sexp]
-
-let create () =
+let create () : Scanner.Tokens_data.t =
   {
     operators =
       [ "+"; "-"; "*"; "/"; "%"; "=="; "<="; "<"; ">="; ">"; "="; "!=" ];
@@ -58,7 +51,7 @@ let create () =
 
 let%expect_test "" =
   let tt = create () in
-  print_s [%message (tt : tt)];
+  print_s [%message (tt : Scanner.Tokens_data.t)];
   [%expect
     {|
     (tt
@@ -75,8 +68,8 @@ let%expect_test "" =
        (int str double if else while get set read_int read_str read_double
         print_int print_str print_double))) |}
   in
-  let tt = tt_of_sexp (Sexp.of_string sexp) in
-  print_s [%message (tt : tt)];
+  let tt = Scanner.Tokens_data.t_of_sexp (Sexp.of_string sexp) in
+  print_s [%message (tt : Scanner.Tokens_data.t)];
   [%expect
     {|
     (tt
@@ -85,6 +78,30 @@ let%expect_test "" =
       (reserved_words
        (int str double if else while get set read_int read_str read_double
         print_int print_str print_double)))) |}]
+
+let%expect_test "test parsing tokens.in" =
+  let t = create () in
+  let wrap_each_char s =
+    let wrapped = ref "" in
+    String.iter s ~f:(fun c ->
+        if Char.(c = '$') then wrapped := String.of_char c
+        else wrapped := !wrapped ^ "[" ^ String.of_char c ^ "]");
+    !wrapped
+  in
+  let reduce = List.reduce_exn ~f:(fun acc op -> acc ^ "|" ^ op) in
+
+  let operators = List.map t.operators ~f:wrap_each_char in
+  let separators = List.map t.separators ~f:wrap_each_char in
+  let reserved_words = "^(" ^ reduce t.reserved_words ^ ")" in
+  let operators = reduce operators in
+  let separators = reduce separators in
+  print_string operators;
+  [%expect "[+]|[-]|[*]|[/]|[%]|[=][=]|[<][=]|[<]|[>][=]|[>]|[=]|[!][=]"];
+  print_string separators;
+  [%expect "[{]|[}]|[(]|[)]|[;]|[ ]|$"];
+  print_string reserved_words;
+  [%expect
+    "^(int|str|double|if|else|while|get|set|read_int|read_str|read_double|print_int|print_str|print_double)"]
 
 let scan =
   let operators =
