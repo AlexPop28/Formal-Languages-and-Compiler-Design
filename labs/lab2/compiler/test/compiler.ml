@@ -49,7 +49,7 @@ let create_tokens_data () : Scanner.Tokens_data.t =
       ];
   }
 
-let%expect_test "" =
+let%expect_test "test parse tokens.in" =
   let tokens_data = create_tokens_data () in
   print_s [%message (tokens_data : Scanner.Tokens_data.t)];
   [%expect
@@ -79,7 +79,8 @@ let%expect_test "" =
        (int str double if else while get set read_int read_str read_double
         print_int print_str print_double)))) |}]
 
-let%expect_test "test parsing tokens.in" =
+let%expect_test "awful test to see if the regexps are constructed properly; to \
+                 be refactored" =
   let t = create_tokens_data () in
   let wrap_each_char s =
     let wrapped = ref "" in
@@ -145,20 +146,71 @@ print_int(ans);
 |}
   in
   let st, pif = Or_error.ok_exn result in
-  let pif = Pif.to_list pif in
-  print_s [%message (pif : (string * int) list)];
+  print_string (Pif.to_hum pif);
   [%expect
     {|
-    (pif
-     ((int -1) (id 97) (";" -1) (int -1) (id 98) (";" -1) (int -1) (id 99)
-      (";" -1) (id 97) (= -1) (read_int -1) ("(" -1) (")" -1) (";" -1) (id 98)
-      (= -1) (read_int -1) ("(" -1) (")" -1) (";" -1) (id 99) (= -1)
-      (read_int -1) ("(" -1) (")" -1) (";" -1) (int -1) (id 441021) (";" -1)
-      (id 441021) (= -1) (id 97) (";" -1) (if -1) ("(" -1) (id 98) (> -1)
-      (id 441021) (")" -1) ({ -1) (id 441021) (= -1) (id 98) (} -1) (if -1)
-      ("(" -1) (id 99) (> -1) (id 441021) (")" -1) ({ -1) (id 441021) (= -1)
-      (id 99) (";" -1) (} -1) (print_int -1) ("(" -1) (id 441021) (")" -1)
-      (";" -1))) |}];
+    -1: int
+    97: id
+    -1: ;
+    -1: int
+    98: id
+    -1: ;
+    -1: int
+    99: id
+    -1: ;
+    97: id
+    -1: =
+    -1: read_int
+    -1: (
+    -1: )
+    -1: ;
+    98: id
+    -1: =
+    -1: read_int
+    -1: (
+    -1: )
+    -1: ;
+    99: id
+    -1: =
+    -1: read_int
+    -1: (
+    -1: )
+    -1: ;
+    -1: int
+    441021: id
+    -1: ;
+    441021: id
+    -1: =
+    97: id
+    -1: ;
+    -1: if
+    -1: (
+    98: id
+    -1: >
+    441021: id
+    -1: )
+    -1: {
+    441021: id
+    -1: =
+    98: id
+    -1: }
+    -1: if
+    -1: (
+    99: id
+    -1: >
+    441021: id
+    -1: )
+    -1: {
+    441021: id
+    -1: =
+    99: id
+    -1: ;
+    -1: }
+    -1: print_int
+    -1: (
+    441021: id
+    -1: )
+    -1: ; |}];
   print_string (Symbol_table.to_hum st);
   [%expect {|
     97: a
@@ -191,21 +243,79 @@ if (prime == 0) {
 |}
   in
   let st, pif = Or_error.ok_exn result in
-  let pif = Pif.to_list pif in
-  print_s [%message (pif : (string * int) list)];
+  print_string (Pif.to_hum pif);
   [%expect
     {|
-    (pif
-     ((int -1) (id 110) (";" -1) (id 110) (= -1) (read_int -1) ("(" -1) (")" -1)
-      (";" -1) (int -1) (id 196883) (";" -1) (id 196883) (= -1) (const 49)
-      (";" -1) (int -1) (id 100) (";" -1) (id 100) (= -1) (const 50) (";" -1)
-      (while -1) ("(" -1) (id 100) (< -1) (id 110) (")" -1) ({ -1) (if -1)
-      ("(" -1) (id 110) (% -1) (id 100) (== -1) (const 48) (")" -1) ({ -1)
-      (id 196883) (= -1) (const 48) (";" -1) (} -1) (id 100) (= -1) (id 100)
-      (+ -1) (const 49) (";" -1) (} -1) (if -1) ("(" -1) (id 196883) (== -1)
-      (const 48) (")" -1) ({ -1) (print_str -1) ("(" -1) (const 649405) (")" -1)
-      (} -1) (else -1) ({ -1) (print_str -1) ("(" -1) (const 483306) (")" -1)
-      (} -1))) |}];
+    -1: int
+    110: id
+    -1: ;
+    110: id
+    -1: =
+    -1: read_int
+    -1: (
+    -1: )
+    -1: ;
+    -1: int
+    196883: id
+    -1: ;
+    196883: id
+    -1: =
+    49: const
+    -1: ;
+    -1: int
+    100: id
+    -1: ;
+    100: id
+    -1: =
+    50: const
+    -1: ;
+    -1: while
+    -1: (
+    100: id
+    -1: <
+    110: id
+    -1: )
+    -1: {
+    -1: if
+    -1: (
+    110: id
+    -1: %
+    100: id
+    -1: ==
+    48: const
+    -1: )
+    -1: {
+    196883: id
+    -1: =
+    48: const
+    -1: ;
+    -1: }
+    100: id
+    -1: =
+    100: id
+    -1: +
+    49: const
+    -1: ;
+    -1: }
+    -1: if
+    -1: (
+    196883: id
+    -1: ==
+    48: const
+    -1: )
+    -1: {
+    -1: print_str
+    -1: (
+    649405: const
+    -1: )
+    -1: }
+    -1: else
+    -1: {
+    -1: print_str
+    -1: (
+    483306: const
+    -1: )
+    -1: } |}];
   print_string (Symbol_table.to_hum st);
   [%expect
     {|
@@ -238,18 +348,60 @@ print_int(sum);
 |}
   in
   let st, pif = Or_error.ok_exn result in
-  let pif = Pif.to_list pif in
-  print_s [%message (pif : (string * int) list)];
+  print_string (Pif.to_hum pif);
   [%expect
     {|
-    (pif
-     ((int -1) (id 110) (";" -1) (id 110) (= -1) (read_int -1) ("(" -1) (")" -1)
-      (";" -1) (int -1) (id 105) (";" -1) (id 105) (= -1) (const 48) (";" -1)
-      (int -1) (id 299670) (";" -1) (id 299670) (= -1) (const 48) (";" -1)
-      (while -1) ("(" -1) (id 105) (< -1) (id 110) (")" -1) ({ -1) (int -1)
-      (id 120) (";" -1) (id 120) (= -1) (read_int -1) ("(" -1) (")" -1) (";" -1)
-      (id 299670) (= -1) (id 299670) (+ -1) (id 120) (";" -1) (} -1)
-      (print_int -1) ("(" -1) (id 299670) (")" -1) (";" -1))) |}];
+    -1: int
+    110: id
+    -1: ;
+    110: id
+    -1: =
+    -1: read_int
+    -1: (
+    -1: )
+    -1: ;
+    -1: int
+    105: id
+    -1: ;
+    105: id
+    -1: =
+    48: const
+    -1: ;
+    -1: int
+    299670: id
+    -1: ;
+    299670: id
+    -1: =
+    48: const
+    -1: ;
+    -1: while
+    -1: (
+    105: id
+    -1: <
+    110: id
+    -1: )
+    -1: {
+    -1: int
+    120: id
+    -1: ;
+    120: id
+    -1: =
+    -1: read_int
+    -1: (
+    -1: )
+    -1: ;
+    299670: id
+    -1: =
+    299670: id
+    -1: +
+    120: id
+    -1: ;
+    -1: }
+    -1: print_int
+    -1: (
+    299670: id
+    -1: )
+    -1: ; |}];
   print_string (Symbol_table.to_hum st);
   [%expect {|
     48: 0
