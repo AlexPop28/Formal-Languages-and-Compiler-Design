@@ -1,7 +1,10 @@
 open! Core
 
 let scan =
-  let operators = "\\+|\\-|\\*|/|%|==|<=|<|>=|>|=|!=" in
+  let operators =
+    "[+]|[-]|[*]|[/]|[%]|[=][=]|[<][=]|[<]|[>][=]|[>]|[=]|[!][=]"
+  in
+  (* let operators = "\\+|\\-|\\*|/|%|==|<=|<|>=|>|=|!=" in *)
   let separators = "[{}(); ]|$" in
   let append_operator_or_separator pattern =
     pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"

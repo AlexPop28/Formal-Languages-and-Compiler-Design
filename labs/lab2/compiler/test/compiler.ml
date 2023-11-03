@@ -25,9 +25,73 @@ let%expect_test "test symbol table operations" =
     50: 2
     358850: test |}]
 
+type tt = {
+  operators : string list;
+  separators : string list;
+  reserved_words : string list;
+}
+[@@deriving sexp]
+
+let create () =
+  {
+    operators =
+      [ "+"; "-"; "*"; "/"; "%"; "=="; "<="; "<"; ">="; ">"; "="; "!=" ];
+    separators = [ "{"; "}"; "("; ")"; ";"; " "; "$" ];
+    reserved_words =
+      [
+        "int";
+        "str";
+        "double";
+        "if";
+        "else";
+        "while";
+        "get";
+        "set";
+        "read_int";
+        "read_str";
+        "read_double";
+        "print_int";
+        "print_str";
+        "print_double";
+      ];
+  }
+
+let%expect_test "" =
+  let tt = create () in
+  print_s [%message (tt : tt)];
+  [%expect
+    {|
+    (tt
+     ((operators (+ - * / % == <= < >= > = !=))
+      (separators ({ } "(" ")" ";" " " $))
+      (reserved_words
+       (int str double if else while get set read_int read_str read_double
+        print_int print_str print_double)))) |}];
+  let sexp =
+    {|
+     ((operators (+ - * / % == <= < >= > = !=))
+      (separators ({ } "(" ")" ";" " " $))
+      (reserved_words
+       (int str double if else while get set read_int read_str read_double
+        print_int print_str print_double))) |}
+  in
+  let tt = tt_of_sexp (Sexp.of_string sexp) in
+  print_s [%message (tt : tt)];
+  [%expect
+    {|
+    (tt
+     ((operators (+ - * / % == <= < >= > = !=))
+      (separators ({ } "(" ")" ";" " " $))
+      (reserved_words
+       (int str double if else while get set read_int read_str read_double
+        print_int print_str print_double)))) |}]
+
 let scan =
-  let operators = "\\+|\\-|\\*|/|%|==|<=|<|>=|>|=|!=" in
-  let separators = "[{}(); ]|$" in
+  let operators =
+    "[+]|[-]|[*]|[/]|[%]|[=][=]|[<][=]|[<]|[>][=]|[>]|[=]|[!][=]"
+  in
+  let separators = "[{]|[}]|[(]|[)]|[;]|[ ]|$" in
+  (* let separators = "[{}(); ]|$" in *)
   let append_operator_or_separator pattern =
     pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"
   in
@@ -145,7 +209,8 @@ if (prime == 0) {
       (} -1) (else -1) ({ -1) (print_str -1) ("(" -1) (const 483306) (")" -1)
       (} -1))) |}];
   print_string (Symbol_table.to_hum st);
-  [%expect {|
+  [%expect
+    {|
     48: 0
     49: 1
     50: 2
@@ -219,4 +284,7 @@ print_int(sum);
   [%expect
     {|
       (result
-       (Error ("Lexical error" "Lexical error" "Lexical error" "Lexical error"))) |}]
+       (Error
+        ("Lexical error at line 2: _n;" "Lexical error at line 3: _n = read_int();"
+         "Lexical error at line 4: # wrong comment"
+         "Lexical error at line 8: _n) {"))) |}]
