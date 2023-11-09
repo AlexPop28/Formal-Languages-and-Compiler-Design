@@ -1,0 +1,5 @@
+(library
+ (name        scanner)
+ (modules     scanner import)
+ (libraries   core symbol_table pif re2)
+ (preprocess  (pps ppx_jane)))

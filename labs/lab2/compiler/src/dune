@@ -1,4 +1,5 @@
 (executable
  (public_name compiler)
  (name main)
- (libraries hashtable))
+ (libraries  core core_unix.filename_unix core_unix.command_unix scanner)
+ (preprocess (pps ppx_jane)))

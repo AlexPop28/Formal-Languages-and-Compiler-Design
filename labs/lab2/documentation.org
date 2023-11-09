@@ -1,0 +1,12 @@
+#+TITLE: Lab 2 documentation
+#+AUTHOR: Alex Pop
+https://github.com/AlexPop28/Formal-Languages-and-Compiler-Design
+
+I will use one symbol table for both identifiers and constants. It is
+implemented using a hash table (named =Indexed_hashset= in the code due to it
+not having an explicit value associated with the key, but rather an index that
+can be used to retrieve a key if it exists). It provides two functions, namely
+=add_symbol= and =get_symbol= for adding a new symbol (and getting its index
+back) and retrieving a symbol using its index (if it is valid), respectively.
+The hashing function used is a polynomial hash based on the ASCII codes of the
+characters and conflict resolution is done by open addressing.

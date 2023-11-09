@@ -1,6 +1,6 @@
 open! Core
 
-type t = string option array
+type t = string option array [@@deriving sexp]
 
 let size = 666_013
 let create () = Array.init size ~f:(fun _ -> None)
@@ -36,3 +36,19 @@ let add t key =
 
 let get_by_index t index =
   if index < 0 || index >= size then None else t.(index)
+
+let array_to_string arr =
+  let buffer = Buffer.create 1024 in
+  Array.iter
+    ~f:(fun (int_val, str_val) ->
+      Buffer.add_string buffer (string_of_int int_val);
+      Buffer.add_string buffer ": ";
+      Buffer.add_string buffer str_val;
+      Buffer.add_char buffer '\n')
+    arr;
+  Buffer.contents buffer
+
+let to_hum (t : t) =
+  Array.filter_mapi t ~f:(fun i key ->
+      Option.bind key ~f:(fun key -> Some (i, key)))
+  |> array_to_string
