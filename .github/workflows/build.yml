@@ -18,8 +18,6 @@ jobs:
 
     - name: Set up OCaml and Dune
       uses: ocaml/setup-ocaml@v2
-      with:
-        opam-repository: default
 
     - name: Change directory to ./labs/lab2/compiler
       run: cd labs/lab2/compiler
