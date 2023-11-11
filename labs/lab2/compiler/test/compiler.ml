@@ -438,3 +438,43 @@ print_int(sum);
         ("Lexical error at line 2: _n;" "Lexical error at line 3: _n = read_int();"
          "Lexical error at line 4: # wrong comment"
          "Lexical error at line 8: _n) {"))) |}]
+
+let%expect_test "test finite automaton" =
+  let sexp =
+    Sexplib.Sexp.of_string
+      {|
+      ((alphabet (a b c))
+      (states (A B C))
+      (initial_state A)
+      (final_states (C))
+      (transitions ((A B a) (B B b) (B C c))))|}
+  in
+  let fa = Finite_automaton.t_of_sexp sexp |> Or_error.ok_exn in
+  print_s
+    [%message
+      (Finite_automaton.get_alphabet fa : char list)
+        (Finite_automaton.get_initial_state fa : char)
+        (Finite_automaton.get_final_states fa : char list)
+        (Finite_automaton.get_states fa : char list)
+        (Finite_automaton.get_transitions fa : (char * char * char) list)];
+  [%expect
+    {|
+    (("Finite_automaton.get_alphabet fa" (a b c))
+     ("Finite_automaton.get_initial_state fa" A)
+     ("Finite_automaton.get_final_states fa" (C))
+     ("Finite_automaton.get_states fa" (A B C))
+     ("Finite_automaton.get_transitions fa" ((A B a) (B B b) (B C c))))|}];
+  print_s [%message (Finite_automaton.does_accept_exn fa "a" : bool)];
+  [%expect {| ("Finite_automaton.does_accept_exn fa \"a\"" false) |}];
+  print_s [%message (Finite_automaton.does_accept_exn fa "ab" : bool)];
+  [%expect {| ("Finite_automaton.does_accept_exn fa \"ab\"" false) |}];
+  print_s [%message (Finite_automaton.does_accept_exn fa "ac" : bool)];
+  [%expect {| ("Finite_automaton.does_accept_exn fa \"ac\"" true) |}];
+  print_s [%message (Finite_automaton.does_accept_exn fa "abc" : bool)];
+  [%expect {| ("Finite_automaton.does_accept_exn fa \"abc\"" true) |}];
+  print_s [%message (Finite_automaton.does_accept_exn fa "abbc" : bool)];
+  [%expect {| ("Finite_automaton.does_accept_exn fa \"abbc\"" true) |}];
+  print_s [%message (Finite_automaton.does_accept_exn fa "abbbc" : bool)];
+  [%expect {| ("Finite_automaton.does_accept_exn fa \"abbbc\"" true) |}];
+  print_s [%message (Finite_automaton.does_accept_exn fa "abbbbc" : bool)];
+  [%expect {| ("Finite_automaton.does_accept_exn fa \"abbbbc\"" true) |}]
