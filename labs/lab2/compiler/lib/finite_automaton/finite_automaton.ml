@@ -65,14 +65,25 @@ let is_final_state t state =
   (* print_s [%message (state : char) (t.parsed_data.final_states : char list)]; *)
   List.exists t.parsed_data.final_states ~f:(Char.equal state)
 
-let does_accept_exn t s =
+let get_longest_accepted_prefix_exn t s =
   if not t.is_dfa then raise_s [%message "The automaton is a NFA."];
-  let rec dfs state s =
-    match s with
-    | "" -> is_final_state t state
-    | s -> (
-        match Hashtbl.find t.transitions (state, String.get s 0) with
-        | None -> false
-        | Some next_state -> dfs next_state (String.drop_prefix s 1))
+  let rec dfs state s index =
+    let result =
+      if index >= String.length s then None
+      else
+        let%bind.Option next_state =
+          Hashtbl.find t.transitions (state, String.get s index)
+        in
+        dfs next_state s (index + 1)
+    in
+    match result with
+    | Some _ -> result
+    | None -> if is_final_state t state then Some index else None
   in
-  dfs t.parsed_data.initial_state s
+  let%bind.Option index = dfs t.parsed_data.initial_state s 0 in
+  Some (String.prefix s (index + 1))
+
+let does_accept_exn t s =
+  match get_longest_accepted_prefix_exn t s with
+  | Some len when String.equal s len -> true
+  | _ -> false

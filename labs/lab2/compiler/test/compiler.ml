@@ -450,6 +450,7 @@ let%expect_test "test finite automaton" =
       (transitions ((A B a) (B B b) (B C c))))|}
   in
   let fa = Finite_automaton.t_of_sexp sexp |> Or_error.ok_exn in
+  let accepts = Finite_automaton.does_accept_exn fa in
   print_s
     [%message
       (Finite_automaton.get_alphabet fa : char list)
@@ -464,17 +465,17 @@ let%expect_test "test finite automaton" =
      ("Finite_automaton.get_final_states fa" (C))
      ("Finite_automaton.get_states fa" (A B C))
      ("Finite_automaton.get_transitions fa" ((A B a) (B B b) (B C c))))|}];
-  print_s [%message (Finite_automaton.does_accept_exn fa "a" : bool)];
-  [%expect {| ("Finite_automaton.does_accept_exn fa \"a\"" false) |}];
-  print_s [%message (Finite_automaton.does_accept_exn fa "ab" : bool)];
-  [%expect {| ("Finite_automaton.does_accept_exn fa \"ab\"" false) |}];
-  print_s [%message (Finite_automaton.does_accept_exn fa "ac" : bool)];
-  [%expect {| ("Finite_automaton.does_accept_exn fa \"ac\"" true) |}];
-  print_s [%message (Finite_automaton.does_accept_exn fa "abc" : bool)];
-  [%expect {| ("Finite_automaton.does_accept_exn fa \"abc\"" true) |}];
-  print_s [%message (Finite_automaton.does_accept_exn fa "abbc" : bool)];
-  [%expect {| ("Finite_automaton.does_accept_exn fa \"abbc\"" true) |}];
-  print_s [%message (Finite_automaton.does_accept_exn fa "abbbc" : bool)];
-  [%expect {| ("Finite_automaton.does_accept_exn fa \"abbbc\"" true) |}];
-  print_s [%message (Finite_automaton.does_accept_exn fa "abbbbc" : bool)];
-  [%expect {| ("Finite_automaton.does_accept_exn fa \"abbbbc\"" true) |}]
+  print_s [%message (accepts "a" : bool)];
+  [%expect {| ("accepts \"a\"" false) |}];
+  print_s [%message (accepts "ab" : bool)];
+  [%expect {| ("accepts \"ab\"" false) |}];
+  print_s [%message (accepts "ac" : bool)];
+  [%expect {| ("accepts \"ac\"" true) |}];
+  print_s [%message (accepts "abc" : bool)];
+  [%expect {| ("accepts \"abc\"" true) |}];
+  print_s [%message (accepts "abbc" : bool)];
+  [%expect {| ("accepts \"abbc\"" true) |}];
+  print_s [%message (accepts "abbbc" : bool)];
+  [%expect {| ("accepts \"abbbc\"" true) |}];
+  print_s [%message (accepts "abbbbc" : bool)];
+  [%expect {| ("accepts \"abbbbc\"" true) |}]
