@@ -8,13 +8,20 @@ let scan =
   let identifiers = [ "^([a-z][a-z0-9_]*)" ] in
   Scanner.scan_with_tokens_data ~constants ~identifiers
 
-let command =
+let scanner_command =
   Command.basic_or_error ~summary:"Run lexical analysis on a source code file"
-    (let%map_open.Command file = anon ("filename" %: Filename_unix.arg_type)
-     and tokens_file = anon ("tokens_file" %: Filename_unix.arg_type)
-     and st_out = anon ("symbol_table_output_file" %: Filename_unix.arg_type)
+    (let open Command.Let_syntax in
+     let%map_open file = anon ("source-code-file" %: Filename_unix.arg_type)
+     and tokens_file =
+       flag "tokens" (required Filename_unix.arg_type) ~doc:"FILE Tokens file"
+     and st_out =
+       flag "st"
+         (required Filename_unix.arg_type)
+         ~doc:"FILE Symbol table output file"
      and pif_out =
-       anon ("program_internal_form_output_file" %: Filename_unix.arg_type)
+       flag "pif"
+         (required Filename_unix.arg_type)
+         ~doc:"FILE Program internal form output file"
      in
 
      fun () ->
@@ -28,4 +35,4 @@ let command =
        Out_channel.write_all pif_out ~data:(Pif.to_hum pif);
        print_endline "Lexically correct")
 
-let () = Command_unix.run command
+let () = Command_unix.run scanner_command
