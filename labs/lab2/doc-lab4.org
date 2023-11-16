@@ -1,0 +1,84 @@
+#+TITLE: Lab 4
+#+AUTHOR: Alex Pop
+#+OPTIONS: toc:nil
+
+* About this lab
+I implemented and tested a new module, =Finite_automaton= that exposes an
+interface for describing an automaton parsed from an S-expression and check if a
+sequence is accepted by it using a =dfs= if the provided automaton is a
+deterministic one. I have also adapted the scanner code to use finite automata
+for parsing integer constants and identifiers.
+
+The following are the now available commands (only non-ambiguos prefixes are
+needed for them to work; e.g. =f de= instead of =finite-automaton describe=):
+
+#+CAPTION: Toplevel help
+#+BEGIN_SRC
+Helper commands
+
+  main.exe SUBCOMMAND
+
+=== subcommands ===
+
+  finite-automaton           . Commands for finite automata
+  scan                       . Run lexical analysis on a source code file
+#+END_SRC
+
+#+CAPTION: =finite-automaton -help=
+#+BEGIN_SRC
+Commands for finite automata
+
+  main.exe finite-automaton SUBCOMMAND
+
+=== subcommands ===
+
+  describe                   . Describe the parsed automaton from a file
+  does-accept                . Check if a string is accepted by the automaton
+#+END_SRC
+
+#+CAPTION: =finite-automaton describe -help=
+#+BEGIN_SRC
+Describe the parsed automaton from a file
+
+  main.exe finite-automaton describe AUTOMATON-FILE
+
+=== flags ===
+
+  [-alphabet]                . Print the alphabet
+  [-final-states]            . Print the final states
+  [-initial-state]           . Print the initial state
+  [-states]                  . Print all the states
+  [-transitions]             . Print the transitions
+  [-help], -?                . print this help text and exit
+#+END_SRC
+
+#+CAPTION: =finite-automaton does-accept -help=
+#+BEGIN_SRC
+Check if a string is accepted by the automaton
+
+  main.exe finite-automaton does-accept AUTOMATON-FILE INPUT_STRING
+#+END_SRC
+
+* =fa.in= specification
+=fa= represents the format of the file that describes an automaton when running
+the commands starting with =finite-automaton=.
+
+#+CAPTION: Finite automaton specification file format in EBNF
+#+BEGIN_SRC
+  fa                 = "(" alphabet_spec
+                           states_spec
+                           initial_state_spec
+                           final_states_spec
+                           transitions_spec ")"
+  alphabet_spec      = "(alphabet (" {symbol} "))"
+  states_spec        = "(states (" {state} "))"
+  initial_state_spec = "(initial_state " state ")"
+  final_states_spec  = "(final_states (" ([state] | state {" " state}) "))"
+  transitions_spec   = "(transitions (" [transition] | transition {" " transition} "))"
+  transition         = "(" state state symbol ")"
+  symbol             = letter | digit | "+" | "-"
+  state              = letter
+  letter             = "A" | "B" | ... | "Z" | "a" | "b" | ... | "z"
+  digit              = "0" | "1" | ... | "9"
+#+END_SRC
+
