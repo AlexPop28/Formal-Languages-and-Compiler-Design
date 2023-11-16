@@ -114,11 +114,14 @@ let get_constants_fa () =
       (transitions (
         (S A (+ -))
         (S Z (0))
-        (S Z (1 2 3 4 5 6 7 8 9))
+        (S B (1 2 3 4 5 6 7 8 9))
         (A B (1 2 3 4 5 6 7 8 9))
         (B B (1 2 3 4 5 6 7 8 9 0))
         (B X (.))
+        (Y X (.))
         (X X (1 2 3 4 5 6 7 8 9 0))
+        (A Y (0))
+
 
         (S T ("\""))
         (T T (" " a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9))
@@ -141,11 +144,6 @@ let get_identifiers_fa () =
 
 let scan =
   let tokens_data = create_tokens_data () in
-  (* let int_constant = "^(0|[+-]?[1-9][0-9]*\)" in *)
-  (* let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in *)
-  (* let str_constant = "^(\"[^\"]*\")" in *)
-  (* let constants = [ int_constant; double_constant; str_constant ] in *)
-  (* let identifiers = [ "^([a-z][a-z0-9_]*\)" ] in *)
   let constants = get_constants_fa () in
   let identifiers = get_identifiers_fa () in
   Scanner.scan_with_tokens_data ~tokens_data ~constants ~identifiers
