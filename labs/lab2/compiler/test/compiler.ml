@@ -107,7 +107,7 @@ let%expect_test "awful test to see if the regexps are constructed properly; to \
 let get_constants_fa () =
   Sexplib.Sexp.of_string
     {|
-      ((alphabet (. 0 1 2 3 4 5 6 7 8 9 + - " " "\"" a b c d e f g h i j k l m n o p q r s t u v w x y z))
+      ((alphabet (. 0 1 2 3 4 5 6 7 8 9 + - " " "\"" a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z))
       (states (S A B T R X Y Z))
       (initial_state S)
       (final_states (B R X Z))
@@ -121,7 +121,7 @@ let get_constants_fa () =
         (X X (1 2 3 4 5 6 7 8 9 0))
 
         (S T ("\""))
-        (T T (" " a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9))
+        (T T (" " a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9))
         (T R ("\""))
       )))|}
   |> Finite_automaton.t_of_sexp |> Or_error.ok_exn
@@ -129,7 +129,7 @@ let get_constants_fa () =
 let get_identifiers_fa () =
   Sexplib.Sexp.of_string
     {|
-      ((alphabet (_ a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9))
+      ((alphabet (_ a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9))
       (states (S A))
       (initial_state S)
       (final_states (A))

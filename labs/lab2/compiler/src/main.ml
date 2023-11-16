@@ -39,7 +39,8 @@ module Finite_automaton_command = struct
          if transitions then (
            print_endline "Transitions:";
            Finite_automaton.get_transitions fa
-           |> List.map ~f:(fun (x, y, z) -> String.of_list [ x; y; z ])
+           |> List.map ~f:(fun (x, y, z) ->
+                  String.of_char x ^ String.of_char y ^ String.of_list z)
            |> List.iter ~f:print_endline);
          Ok ())
 
@@ -63,13 +64,13 @@ module Finite_automaton_command = struct
 end
 
 module Scanner_command = struct
-  let scan =
-    let int_constant = "^(0|[+-]?[1-9][0-9]*)" in
-    let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in
-    let str_constant = "^(\"[^\"]*\")" in
-    let constants = [ int_constant; double_constant; str_constant ] in
-    let identifiers = [ "^([a-z][a-z0-9_]*)" ] in
-    Scanner.scan_with_tokens_data ~constants ~identifiers
+  (* let scan = *)
+  (*   let int_constant = "^(0|[+-]?[1-9][0-9]*\)" in *)
+  (*   let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in *)
+  (*   let str_constant = "^(\"[^\"]*\")" in *)
+  (*   let constants = [ int_constant; double_constant; str_constant ] in *)
+  (*   let identifiers = [ "^([a-z][a-z0-9_]*\)" ] in *)
+  (*   Scanner.scan_with_tokens_data ~constants ~identifiers *)
 
   let command =
     Command.basic_or_error ~summary:"Run lexical analysis on a source code file"
@@ -85,15 +86,33 @@ module Scanner_command = struct
          flag "pif"
            (required Filename_unix.arg_type)
            ~doc:"FILE Program internal form output file"
+       and constants_file =
+         flag "constants"
+           (required Filename_unix.arg_type)
+           ~doc:"FILE Constants file describing an automaton"
+       and identifiers_file =
+         flag "identifiers"
+           (required Filename_unix.arg_type)
+           ~doc:"FILE Identifiers file describing an automaton"
        in
-
        fun () ->
          let program = In_channel.read_all file in
          let tokens_data =
            In_channel.read_all tokens_file
            |> Sexp.of_string |> Scanner.Tokens_data.t_of_sexp
          in
-         let%map.Or_error st, pif = scan ~tokens_data ~program in
+         let%bind.Or_error constants =
+           In_channel.read_all constants_file
+           |> Sexp.of_string |> Finite_automaton.t_of_sexp
+         in
+         let%bind.Or_error identifiers =
+           In_channel.read_all identifiers_file
+           |> Sexp.of_string |> Finite_automaton.t_of_sexp
+         in
+         let%map.Or_error st, pif =
+           Scanner.scan_with_tokens_data ~constants ~identifiers ~tokens_data
+             ~program
+         in
          Out_channel.write_all st_out ~data:(Symbol_table.to_hum st);
          Out_channel.write_all pif_out ~data:(Pif.to_hum pif);
          print_endline "Lexically correct")

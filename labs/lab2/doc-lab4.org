@@ -59,6 +59,22 @@ Check if a string is accepted by the automaton
   main.exe finite-automaton does-accept AUTOMATON-FILE INPUT_STRING
 #+END_SRC
 
+#+CAPTION: =scan -help=
+#+BEGIN_SRC
+Run lexical analysis on a source code file
+
+  main.exe scan SOURCE-CODE-FILE
+
+=== flags ===
+
+  -constants FILE            . Constants file describing an automaton
+  -identifiers FILE          . Identifiers file describing an automaton
+  -pif FILE                  . Program internal form output file
+  -st FILE                   . Symbol table output file
+  -tokens FILE               . Tokens file
+  [-help], -?                . print this help text and exit
+#+END_SRC
+
 * =fa.in= specification
 =fa= represents the format of the file that describes an automaton when running
 the commands starting with =finite-automaton=.
@@ -76,7 +92,7 @@ the commands starting with =finite-automaton=.
   final_states_spec  = "(final_states (" ([state] | state {" " state}) "))"
   transitions_spec   = "(transitions (" [transition] | transition {" " transition} "))"
   transition         = "(" state state symbol ")"
-  symbol             = letter | digit | "+" | "-" | "."
+  symbol             = letter | digit | "+" | "-" | "." | "\"" | " "
   state              = letter
   letter             = "A" | "B" | ... | "Z" | "a" | "b" | ... | "z"
   digit              = "0" | "1" | ... | "9"
