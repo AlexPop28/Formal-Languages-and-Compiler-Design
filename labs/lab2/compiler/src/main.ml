@@ -40,7 +40,8 @@ module Finite_automaton_command = struct
            print_endline "Transitions:";
            Finite_automaton.get_transitions fa
            |> List.map ~f:(fun (x, y, z) ->
-                  String.of_char x ^ String.of_char y ^ String.of_list z)
+                  String.of_char x ^ " " ^ String.of_char y ^ " ["
+                  ^ String.of_list z ^ "]")
            |> List.iter ~f:print_endline);
          Ok ())
 
@@ -64,14 +65,6 @@ module Finite_automaton_command = struct
 end
 
 module Scanner_command = struct
-  (* let scan = *)
-  (*   let int_constant = "^(0|[+-]?[1-9][0-9]*\)" in *)
-  (*   let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in *)
-  (*   let str_constant = "^(\"[^\"]*\")" in *)
-  (*   let constants = [ int_constant; double_constant; str_constant ] in *)
-  (*   let identifiers = [ "^([a-z][a-z0-9_]*\)" ] in *)
-  (*   Scanner.scan_with_tokens_data ~constants ~identifiers *)
-
   let command =
     Command.basic_or_error ~summary:"Run lexical analysis on a source code file"
       (let open Command.Let_syntax in
