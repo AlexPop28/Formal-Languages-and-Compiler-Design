@@ -10,9 +10,9 @@ module Tokens_data : sig
 end
 
 val scan :
-  separators:Re2.t list ->
-  operators:Re2.t list ->
-  reserved_words:Re2.t list ->
+  separators:Re2.t ->
+  operators:Re2.t ->
+  reserved_words:Re2.t ->
   constants:Re2.t list ->
   identifiers:Re2.t list ->
   program:string ->
