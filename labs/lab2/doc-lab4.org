@@ -8,7 +8,7 @@ I implemented and tested a new module, =Finite_automaton= that exposes an
 interface for describing an automaton parsed from an S-expression and check if a
 sequence is accepted by it using a =dfs= if the provided automaton is a
 deterministic one. I have also adapted the scanner code to use finite automata
-for parsing integer constants and identifiers.
+for parsing all constants and identifiers.
 
 The following are the now available commands (only non-ambiguos prefixes are
 needed for them to work; e.g. =f de= instead of =finite-automaton describe=):
