@@ -7,7 +7,7 @@ module Parsed_data = struct
     initial_state : char;
     final_states : char list;
     (* from, to, character *)
-    transitions : (char * char * char) list;
+    transitions : (char * char * char list) list;
   }
   [@@deriving sexp]
 end
@@ -44,14 +44,23 @@ let t_of_sexp sexp =
   in
   let%bind.Or_error is_dfa =
     List.fold_result data.transitions ~init:true
-      ~f:(fun is_dfa (state0, state1, symbol) ->
+      ~f:(fun is_dfa (state0, state1, symbols) ->
         let%bind.Or_error () = check_valid_state state0 data.states in
         let%bind.Or_error () = check_valid_state state1 data.states in
-        let%bind.Or_error () = check_in_alphabet symbol data.alphabet in
-        match Hashtbl.add transitions ~key:(state0, symbol) ~data:state1 with
-        | `Duplicate -> Ok false
-        | `Ok -> Ok is_dfa)
+        let%bind.Or_error _ =
+          Or_error.all
+            (List.map symbols ~f:(fun symbol ->
+                 check_in_alphabet symbol data.alphabet))
+        in
+        List.fold symbols ~init:is_dfa ~f:(fun is_dfa symbol ->
+            match
+              Hashtbl.add transitions ~key:(state0, symbol) ~data:state1
+            with
+            | `Duplicate -> false
+            | `Ok -> is_dfa)
+        |> Ok)
   in
+
   Ok { parsed_data = data; transitions; is_dfa }
 
 let sexp_of_t t = Parsed_data.sexp_of_t t.parsed_data
@@ -81,7 +90,7 @@ let get_longest_accepted_prefix_exn t s =
     | None -> if is_final_state t state then Some index else None
   in
   let%bind.Option index = dfs t.parsed_data.initial_state s 0 in
-  Some (String.prefix s (index + 1))
+  Some (String.prefix s index)
 
 let does_accept_exn t s =
   match get_longest_accepted_prefix_exn t s with

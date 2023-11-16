@@ -104,13 +104,50 @@ let%expect_test "awful test to see if the regexps are constructed properly; to \
   [%expect
     "^(int|str|double|if|else|while|get|set|read_int|read_str|read_double|print_int|print_str|print_double)"]
 
+let get_constants_fa () =
+  Sexplib.Sexp.of_string
+    {|
+      ((alphabet (. 0 1 2 3 4 5 6 7 8 9 + - " " "\"" a b c d e f g h i j k l m n o p q r s t u v w x y z))
+      (states (S A B T R X Y Z))
+      (initial_state S)
+      (final_states (B R X Z))
+      (transitions (
+        (S A (+ -))
+        (S Z (0))
+        (S Z (1 2 3 4 5 6 7 8 9))
+        (A B (1 2 3 4 5 6 7 8 9))
+        (B B (1 2 3 4 5 6 7 8 9 0))
+        (B X (.))
+        (X X (1 2 3 4 5 6 7 8 9 0))
+
+        (S T ("\""))
+        (T T (" " a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9))
+        (T R ("\""))
+      )))|}
+  |> Finite_automaton.t_of_sexp |> Or_error.ok_exn
+
+let get_identifiers_fa () =
+  Sexplib.Sexp.of_string
+    {|
+      ((alphabet (_ a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9))
+      (states (S A))
+      (initial_state S)
+      (final_states (A))
+      (transitions (
+        (S A (a b c d e f g h i j k l m n o p q r s t u v w x y z))
+        (A A (a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 _))
+      )))|}
+  |> Finite_automaton.t_of_sexp |> Or_error.ok_exn
+
 let scan =
   let tokens_data = create_tokens_data () in
-  let int_constant = "^(0|[+-]?[1-9][0-9]*)" in
-  let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in
-  let str_constant = "^(\"[^\"]*\")" in
-  let constants = [ int_constant; double_constant; str_constant ] in
-  let identifiers = [ "^([a-z][a-z0-9_]*)" ] in
+  (* let int_constant = "^(0|[+-]?[1-9][0-9]*\)" in *)
+  (* let double_constant = "^(0|[+-]?[1-9][0-9]*(\\.[0-9])?)" in *)
+  (* let str_constant = "^(\"[^\"]*\")" in *)
+  (* let constants = [ int_constant; double_constant; str_constant ] in *)
+  (* let identifiers = [ "^([a-z][a-z0-9_]*\)" ] in *)
+  let constants = get_constants_fa () in
+  let identifiers = get_identifiers_fa () in
   Scanner.scan_with_tokens_data ~tokens_data ~constants ~identifiers
 
 let%expect_test "test scanner easy input" =
@@ -447,7 +484,7 @@ let%expect_test "test finite automaton" =
       (states (A B C))
       (initial_state A)
       (final_states (C))
-      (transitions ((A B a) (B B b) (B C c))))|}
+      (transitions ((A B (a)) (B B (b)) (B C (c)))))|}
   in
   let fa = Finite_automaton.t_of_sexp sexp |> Or_error.ok_exn in
   let accepts = Finite_automaton.does_accept_exn fa in
@@ -457,14 +494,14 @@ let%expect_test "test finite automaton" =
         (Finite_automaton.get_initial_state fa : char)
         (Finite_automaton.get_final_states fa : char list)
         (Finite_automaton.get_states fa : char list)
-        (Finite_automaton.get_transitions fa : (char * char * char) list)];
+        (Finite_automaton.get_transitions fa : (char * char * char list) list)];
   [%expect
     {|
     (("Finite_automaton.get_alphabet fa" (a b c))
      ("Finite_automaton.get_initial_state fa" A)
      ("Finite_automaton.get_final_states fa" (C))
      ("Finite_automaton.get_states fa" (A B C))
-     ("Finite_automaton.get_transitions fa" ((A B a) (B B b) (B C c))))|}];
+     ("Finite_automaton.get_transitions fa" ((A B (a)) (B B (b)) (B C (c)))))|}];
   print_s [%message (accepts "a" : bool)];
   [%expect {| ("accepts \"a\"" false) |}];
   print_s [%message (accepts "ab" : bool)];

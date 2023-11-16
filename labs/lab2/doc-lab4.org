@@ -76,7 +76,7 @@ the commands starting with =finite-automaton=.
   final_states_spec  = "(final_states (" ([state] | state {" " state}) "))"
   transitions_spec   = "(transitions (" [transition] | transition {" " transition} "))"
   transition         = "(" state state symbol ")"
-  symbol             = letter | digit | "+" | "-"
+  symbol             = letter | digit | "+" | "-" | "."
   state              = letter
   letter             = "A" | "B" | ... | "Z" | "a" | "b" | ... | "z"
   digit              = "0" | "1" | ... | "9"

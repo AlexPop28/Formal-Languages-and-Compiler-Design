@@ -26,11 +26,17 @@ let detect_token ~separators ~operators ~reserved_words ~constants ~identifiers
           match does_match operators with
           | true -> get_match operators |> Token.Operator |> Ok
           | false -> (
-              match List.find constants ~f:does_match with
-              | Some regex -> get_match regex |> Token.Constant |> Ok
+              match
+                Finite_automaton.get_longest_accepted_prefix_exn constants
+                  program
+              with
+              | Some constant -> constant |> Token.Constant |> Ok
               | None -> (
-                  match List.find identifiers ~f:does_match with
-                  | Some regex -> get_match regex |> Token.Identifier |> Ok
+                  match
+                    Finite_automaton.get_longest_accepted_prefix_exn identifiers
+                      program
+                  with
+                  | Some id -> id |> Token.Identifier |> Ok
                   | None ->
                       Or_error.error_string
                         [%string
@@ -86,26 +92,16 @@ let scan_with_tokens_data ~constants ~identifiers ~(tokens_data : Tokens_data.t)
   let reduce = List.reduce_exn ~f:(fun acc op -> acc ^ "|" ^ op) in
 
   let operators = tokens_data.operators |> wrap_each_char |> reduce in
-
   let separators = tokens_data.separators |> wrap_each_char |> reduce in
+
   let append_operator_or_separator pattern =
     pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"
   in
+
   let reserved_words =
     "^(" ^ reduce tokens_data.reserved_words ^ ")"
-    |> append_operator_or_separator
+    |> append_operator_or_separator |> Re2.create_exn
   in
-  let reserved_words = Re2.create_exn reserved_words in
   let operators = Re2.create_exn ("^(" ^ operators ^ ")") in
   let separators = Re2.create_exn ("^(" ^ separators ^ ")") in
-  let append_operator_or_separator_and_compile s =
-    append_operator_or_separator s |> Re2.create_exn
-  in
-
-  let constants =
-    List.map ~f:append_operator_or_separator_and_compile constants
-  in
-  let identifiers =
-    List.map identifiers ~f:append_operator_or_separator_and_compile
-  in
   scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program

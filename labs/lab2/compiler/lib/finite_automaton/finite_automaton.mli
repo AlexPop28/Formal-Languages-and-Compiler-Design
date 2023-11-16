@@ -6,8 +6,8 @@ module Parsed_data : sig
     states : char list;
     initial_state : char;
     final_states : char list;
-    (* from, to, character *)
-    transitions : (char * char * char) list;
+    (* from, to, characters *)
+    transitions : (char * char * char list) list;
   }
   [@@deriving sexp]
 end
@@ -20,7 +20,7 @@ val get_states : t -> char list
 val get_alphabet : t -> char list
 val get_initial_state : t -> char
 val get_final_states : t -> char list
-val get_transitions : t -> (char * char * char) list
+val get_transitions : t -> (char * char * char list) list
 
 val does_accept_exn : t -> string -> bool
 (** Only works for DFAs. For NFAs an exception is raised. *)

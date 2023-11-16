@@ -13,8 +13,8 @@ val scan :
   separators:Re2.t ->
   operators:Re2.t ->
   reserved_words:Re2.t ->
-  constants:Re2.t list ->
-  identifiers:Re2.t list ->
+  constants:Finite_automaton.t ->
+  identifiers:Finite_automaton.t ->
   program:string ->
   (Symbol_table.t * Pif.t) Or_error.t
 (** [separators] and [operators] should contain regular expressions that are
@@ -28,9 +28,10 @@ val scan :
     [reserved_words]. *)
 
 val scan_with_tokens_data :
-  constants:string list ->
-  identifiers:string list ->
+  constants:Finite_automaton.t ->
+  identifiers:Finite_automaton.t ->
   tokens_data:Tokens_data.t ->
   program:string ->
   (Symbol_table.t * Pif.t) Or_error.t
-(** [constants] and [identifiers] contain string representations of the regular expressions to be enhanced and compiled. *)
+(** [identifiers] contains string representations of the regular expressions to
+    be enhanced and compiled. *)
