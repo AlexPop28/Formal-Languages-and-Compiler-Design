@@ -2,6 +2,7 @@
 #+AUTHOR: Alex Pop
 #+OPTIONS: toc:nil
 
+https://github.com/AlexPop28/Formal-Languages-and-Compiler-Design/pull/2
 * About this lab
 I implemented and tested a new module, =Finite_automaton= that exposes an
 interface for describing an automaton parsed from an S-expression and check if a
