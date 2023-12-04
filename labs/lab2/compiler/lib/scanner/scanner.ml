@@ -13,24 +13,30 @@ end
 
 let detect_token ~separators ~operators ~reserved_words ~constants ~identifiers
     ~program ~line_number =
-  let f regex = Re2.matches regex program in
+  let does_match regex = Re2.matches regex program in
   let get_match regex =
     (Re2.find_submatches_exn regex program).(1) |> Option.value_exn
   in
-  match List.find reserved_words ~f with
-  | Some regex -> get_match regex |> Token.Reserved_word |> Ok
-  | None -> (
-      match List.find separators ~f with
-      | Some regex -> get_match regex |> Token.Separator |> Ok
-      | None -> (
-          match List.find operators ~f with
-          | Some regex -> get_match regex |> Token.Operator |> Ok
-          | None -> (
-              match List.find constants ~f with
-              | Some regex -> get_match regex |> Token.Constant |> Ok
+  match does_match reserved_words with
+  | true -> get_match reserved_words |> Token.Reserved_word |> Ok
+  | false -> (
+      match does_match separators with
+      | true -> get_match separators |> Token.Separator |> Ok
+      | false -> (
+          match does_match operators with
+          | true -> get_match operators |> Token.Operator |> Ok
+          | false -> (
+              match
+                Finite_automaton.get_longest_accepted_prefix_exn constants
+                  program
+              with
+              | Some constant -> constant |> Token.Constant |> Ok
               | None -> (
-                  match List.find identifiers ~f with
-                  | Some regex -> get_match regex |> Token.Identifier |> Ok
+                  match
+                    Finite_automaton.get_longest_accepted_prefix_exn identifiers
+                      program
+                  with
+                  | Some id -> id |> Token.Identifier |> Ok
                   | None ->
                       Or_error.error_string
                         [%string
@@ -75,37 +81,27 @@ let scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
 
 let scan_with_tokens_data ~constants ~identifiers ~(tokens_data : Tokens_data.t)
     ~program =
-  let wrap_each_char s =
-    let wrapped = ref "" in
-    String.iter s ~f:(fun c ->
-        if Char.(c = '$') then wrapped := String.of_char c
-        else wrapped := !wrapped ^ "[" ^ String.of_char c ^ "]");
-    !wrapped
+  let wrap_each_char =
+    List.map ~f:(fun s ->
+        let wrapped = ref "" in
+        String.iter s ~f:(fun c ->
+            if Char.(c = '$') then wrapped := String.of_char c
+            else wrapped := !wrapped ^ "[" ^ String.of_char c ^ "]");
+        !wrapped)
   in
   let reduce = List.reduce_exn ~f:(fun acc op -> acc ^ "|" ^ op) in
 
-  let operators = List.map tokens_data.operators ~f:wrap_each_char |> reduce in
-  let separators =
-    List.map tokens_data.separators ~f:wrap_each_char |> reduce
-  in
+  let operators = tokens_data.operators |> wrap_each_char |> reduce in
+  let separators = tokens_data.separators |> wrap_each_char |> reduce in
+
   let append_operator_or_separator pattern =
     pattern ^ "(" ^ operators ^ "|" ^ separators ^ ")"
   in
+
   let reserved_words =
     "^(" ^ reduce tokens_data.reserved_words ^ ")"
-    |> append_operator_or_separator
+    |> append_operator_or_separator |> Re2.create_exn
   in
-  let reserved_words = [ Re2.create_exn reserved_words ] in
-  let operators = [ Re2.create_exn ("^(" ^ operators ^ ")") ] in
-  let separators = [ Re2.create_exn ("^(" ^ separators ^ ")") ] in
-  let append_operator_or_separator_and_compile s =
-    append_operator_or_separator s |> Re2.create_exn
-  in
-
-  let constants =
-    List.map ~f:append_operator_or_separator_and_compile constants
-  in
-  let identifiers =
-    List.map identifiers ~f:append_operator_or_separator_and_compile
-  in
+  let operators = Re2.create_exn ("^(" ^ operators ^ ")") in
+  let separators = Re2.create_exn ("^(" ^ separators ^ ")") in
   scan ~separators ~operators ~reserved_words ~constants ~identifiers ~program
