@@ -1,6 +1,12 @@
 open! Core
 
-type t
+type t = {
+  non_terminals : string list;
+  terminals : string list;
+  starting_symbol : string;
+  productions : (string list * string list) list;
+}
+[@@deriving sexp]
 
 val create :
   non_terminals:string list ->
