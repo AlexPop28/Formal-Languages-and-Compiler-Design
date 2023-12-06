@@ -527,3 +527,44 @@ let%expect_test "test finite automaton" =
   print_s [%message (accepts "abbbbc" : bool)];
   [%expect {| ("accepts \"abbbbc\"" true) |}]
 ;;
+
+let get_parser () =
+  let grammar : Grammar.t =
+    { non_terminals = [ "S"; "A" ]
+    ; terminals = [ "a"; "b"; "c" ]
+    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+    }
+  in
+  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+  Parser.create grammar
+;;
+
+let%expect_test "test closure on empty set" =
+  let parser = get_parser () in
+  let items = Hash_set.of_list (module Parser.Lr0_item) [] in
+  let closure = Parser.closure parser items in
+  print_string (Parser.State.to_string_hum closure);
+  [%expect {|
+    () |}]
+;;
+
+let%expect_test "test canonical collection basic" =
+  let parser = get_parser () in
+  let cannonical_collection =
+    Parser.get_cannonical_collection parser |> Or_error.ok_exn
+  in
+  print_string
+    (String.concat
+       ~sep:"\n"
+       (List.map cannonical_collection ~f:Parser.State.to_string_hum));
+  [%expect
+    {|
+      ("[S' -> S.]")
+      ("[S -> a A.]")
+      ("[A -> b A.]")
+      ("[A -> c.]")
+      ("[A -> .c]""[A -> b.A]""[A -> .b A]")
+      ("[S -> a.A]""[A -> .c]""[A -> .b A]")
+      ("[S' -> .S]""[S -> .a A]") |}]
+;;

@@ -16,6 +16,12 @@ module Lr0_item = struct
   ;;
 
   let create_from_production lhp rhp = { lhp; left_dot = []; right_dot = rhp }
+
+  let to_string_hum t =
+    let left_dot = String.concat t.left_dot ~sep:" " |> String.rev in
+    let right_dot = String.concat t.right_dot ~sep:" " in
+    [%string "[%{t.lhp} -> %{left_dot}.%{right_dot}]"]
+  ;;
 end
 
 module State = struct
@@ -23,24 +29,27 @@ module State = struct
 
   let get_all_lr0_items_right_dot_starting_with_symbol t symbol =
     Hash_set.filter t.items ~f:(fun item ->
-      Option.map (List.hd item.right_dot) ~f:(String.equal symbol) |> Option.is_some)
+      match item.right_dot with
+      | hd :: _ when String.equal hd symbol -> true
+      | _ -> false)
   ;;
 
   let equal t1 t2 = Hash_set.equal t1.items t2.items
+  let sexp_of_t t = [%sexp (Hash_set.to_list t.items : Lr0_item.t list)]
+
+  let to_string_hum t =
+    Hash_set.to_list t.items
+    |> List.map ~f:Lr0_item.to_string_hum
+    |> List.to_string ~f:Fn.id
+  ;;
 end
-
-(* canonical collection : State.t array : unde?
-
-   val closure : t -> Lr0_item.t Hash_set.t -> State.t
-   val goto : State.t -> string -> State.t
-   val canonical_collection : Enhanced_grammar.t -> State.t Hashset.t
-*)
 
 type t = { grammar : Enhanced_grammar.t }
 
 let create grammar = { grammar }
 
 let closure t (items : Lr0_item.t Hash_set.t) : State.t =
+  (* print_s [%message "Making closure of:" (Hash_set.to_list items : Lr0_item.t list)]; *)
   { items =
       Hash_set.fold items ~init:(Hash_set.copy items) ~f:(fun acc item ->
         match List.hd item.right_dot with
@@ -80,9 +89,10 @@ let get_cannonical_collection t =
     let%bind.Or_error _ =
       List.map symbols ~f:(fun symbol ->
         let%bind.Or_error next_state = goto t state symbol in
-        if not (List.mem !cannonical_collection ~equal:State.equal next_state)
-        then dfs next_state
-        else Ok ())
+        if Hash_set.is_empty next_state.items
+           || List.mem !cannonical_collection ~equal:State.equal next_state
+        then Ok ()
+        else dfs next_state)
       |> Or_error.all
     in
     Ok ()

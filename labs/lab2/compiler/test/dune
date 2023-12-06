@@ -3,4 +3,13 @@
  (inline_tests)
  (preprocess
   (pps ppx_jane))
- (libraries core symbol_table pif scanner re2 finite_automaton))
+ (libraries
+  core
+  symbol_table
+  pif
+  scanner
+  re2
+  finite_automaton
+  grammar
+  enhanced_grammar
+  parser))
