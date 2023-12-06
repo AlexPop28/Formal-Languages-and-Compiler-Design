@@ -18,6 +18,8 @@ jobs:
 
     - name: Set up OCaml and Dune
       uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: 4.14.x
 
     - name: Change directory to ./labs/lab2/compiler
       run: cd labs/lab2/compiler
