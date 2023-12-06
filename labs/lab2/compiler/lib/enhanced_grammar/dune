@@ -2,4 +2,5 @@
  (name enhanced_grammar)
  (modules enhanced_grammar)
  (libraries core grammar)
- (preprocess (pps ppx_jane)))
+ (preprocess
+  (pps ppx_jane)))

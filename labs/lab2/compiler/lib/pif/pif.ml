@@ -26,3 +26,4 @@ let to_hum t =
       Buffer.add_char buffer '\n')
     (to_list t);
   Buffer.contents buffer
+;;

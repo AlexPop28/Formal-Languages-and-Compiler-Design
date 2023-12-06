@@ -24,30 +24,29 @@ let%expect_test "test symbol table operations" =
   [%expect {|
     50: 2
     358850: test |}]
+;;
 
 let create_tokens_data () : Scanner.Tokens_data.t =
-  {
-    operators =
-      [ "+"; "-"; "*"; "/"; "%"; "=="; "<="; "<"; ">="; ">"; "="; "!=" ];
-    separators = [ "{"; "}"; "("; ")"; ";"; " "; "$" ];
-    reserved_words =
-      [
-        "int";
-        "str";
-        "double";
-        "if";
-        "else";
-        "while";
-        "get";
-        "set";
-        "read_int";
-        "read_str";
-        "read_double";
-        "print_int";
-        "print_str";
-        "print_double";
-      ];
+  { operators = [ "+"; "-"; "*"; "/"; "%"; "=="; "<="; "<"; ">="; ">"; "="; "!=" ]
+  ; separators = [ "{"; "}"; "("; ")"; ";"; " "; "$" ]
+  ; reserved_words =
+      [ "int"
+      ; "str"
+      ; "double"
+      ; "if"
+      ; "else"
+      ; "while"
+      ; "get"
+      ; "set"
+      ; "read_int"
+      ; "read_str"
+      ; "read_double"
+      ; "print_int"
+      ; "print_str"
+      ; "print_double"
+      ]
   }
+;;
 
 let%expect_test "test parse tokens.in" =
   let tokens_data = create_tokens_data () in
@@ -78,19 +77,21 @@ let%expect_test "test parse tokens.in" =
       (reserved_words
        (int str double if else while get set read_int read_str read_double
         print_int print_str print_double)))) |}]
+;;
 
-let%expect_test "awful test to see if the regexps are constructed properly; to \
-                 be refactored" =
+let%expect_test "awful test to see if the regexps are constructed properly; to be \
+                 refactored"
+  =
   let t = create_tokens_data () in
   let wrap_each_char s =
     let wrapped = ref "" in
     String.iter s ~f:(fun c ->
-        if Char.(c = '$') then wrapped := String.of_char c
-        else wrapped := !wrapped ^ "[" ^ String.of_char c ^ "]");
+      if Char.(c = '$')
+      then wrapped := String.of_char c
+      else wrapped := !wrapped ^ "[" ^ String.of_char c ^ "]");
     !wrapped
   in
   let reduce = List.reduce_exn ~f:(fun acc op -> acc ^ "|" ^ op) in
-
   let operators = List.map t.operators ~f:wrap_each_char in
   let separators = List.map t.separators ~f:wrap_each_char in
   let reserved_words = "^(" ^ reduce t.reserved_words ^ ")" in
@@ -103,6 +104,7 @@ let%expect_test "awful test to see if the regexps are constructed properly; to \
   print_string reserved_words;
   [%expect
     "^(int|str|double|if|else|while|get|set|read_int|read_str|read_double|print_int|print_str|print_double)"]
+;;
 
 let get_constants_fa () =
   Sexplib.Sexp.of_string
@@ -127,7 +129,9 @@ let get_constants_fa () =
         (T T (" " a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9))
         (T R ("\""))
       )))|}
-  |> Finite_automaton.t_of_sexp |> Or_error.ok_exn
+  |> Finite_automaton.t_of_sexp
+  |> Or_error.ok_exn
+;;
 
 let get_identifiers_fa () =
   Sexplib.Sexp.of_string
@@ -140,13 +144,16 @@ let get_identifiers_fa () =
         (S A (a b c d e f g h i j k l m n o p q r s t u v w x y z))
         (A A (a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 _))
       )))|}
-  |> Finite_automaton.t_of_sexp |> Or_error.ok_exn
+  |> Finite_automaton.t_of_sexp
+  |> Or_error.ok_exn
+;;
 
 let scan =
   let tokens_data = create_tokens_data () in
   let constants = get_constants_fa () in
   let identifiers = get_identifiers_fa () in
   Scanner.scan_with_tokens_data ~tokens_data ~constants ~identifiers
+;;
 
 let%expect_test "test scanner easy input" =
   let result = scan ~program:"int a;" in
@@ -157,6 +164,7 @@ let%expect_test "test scanner easy input" =
     (pif ((int -1) (id 97) (";" -1))) |}];
   print_s [%message (Symbol_table.get_symbol st 97 : string option)];
   [%expect {| ("Symbol_table.get_symbol st 97" (a)) |}]
+;;
 
 let%expect_test "test scanner p1 lab1" =
   let result =
@@ -252,6 +260,7 @@ print_int(ans);
     98: b
     99: c
     441021: ans |}]
+;;
 
 let%expect_test "test scanner p2 lab1" =
   let result =
@@ -362,6 +371,7 @@ if (prime == 0) {
     196883: prime
     483306: "prime"
     649405: "not prime" |}]
+;;
 
 let%expect_test "test scanner p3 lab 1" =
   let result =
@@ -444,6 +454,7 @@ print_int(sum);
     110: n
     120: x
     299670: sum |}]
+;;
 
 let%expect_test "test scanner p1err lab 1" =
   let result =
@@ -473,6 +484,7 @@ print_int(sum);
         ("Lexical error at line 2: _n;" "Lexical error at line 3: _n = read_int();"
          "Lexical error at line 4: # wrong comment"
          "Lexical error at line 8: _n) {"))) |}]
+;;
 
 let%expect_test "test finite automaton" =
   let sexp =
@@ -514,3 +526,4 @@ let%expect_test "test finite automaton" =
   [%expect {| ("accepts \"abbbc\"" true) |}];
   print_s [%message (accepts "abbbbc" : bool)];
   [%expect {| ("accepts \"abbbbc\"" true) |}]
+;;

@@ -2,4 +2,5 @@
  (name parser)
  (modules parser)
  (libraries core enhanced_grammar)
- (preprocess (pps ppx_jane)))
+ (preprocess
+  (pps ppx_jane)))
