@@ -21,11 +21,8 @@ jobs:
       with:
         ocaml-compiler: 4.14.x
 
-    - name: Change directory to ./labs/lab2/compiler
-      run: cd labs/lab2/compiler
-
     - name: Install dependencies
-      run: opam install --deps-only .
+      run: opam install --deps-only ./labs/lab2/compiler
 
     - name: Run Dune Test
-      run: dune runtest
+      run: cd ./labs/lab2/compiler && dune runtest
