@@ -25,4 +25,4 @@ jobs:
       run: opam install --deps-only ./labs/lab2/compiler
 
     - name: Run Dune Test
-      run: cd ./labs/lab2/compiler && ~/.opam/default/bin/dune runtest
+      run: cd ./labs/lab2/compiler && opam exec -- dune runtest
