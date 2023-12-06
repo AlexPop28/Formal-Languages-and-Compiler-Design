@@ -22,3 +22,10 @@ let create grammar =
         starting_symbol = "S'";
         productions = ("S'", [ grammar.starting_symbol ]) :: productions;
       }
+
+let is_non_terminal t symbol =
+  List.mem t.non_terminals symbol ~equal:String.equal
+
+let get_productions_of t symbol =
+  List.filter_map t.productions ~f:(fun (lhp, rhp) ->
+      Option.some_if (String.equal lhp symbol) rhp)
