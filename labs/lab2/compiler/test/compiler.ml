@@ -548,8 +548,19 @@ let%expect_test "test closure on empty set" =
   let items = Hash_set.of_list (module Parser.Lr0_item) [] in
   let closure = Parser.closure parser items in
   print_string (Parser.State.to_string_hum closure);
-  [%expect {|
-    () |}]
+  [%expect {| |}]
+;;
+
+let%expect_test "test closure basic" =
+  let parser = get_parser () in
+  let items =
+    Hash_set.of_list
+      (module Parser.Lr0_item)
+      [ { lhp = "S"; left_dot = [ "a" ]; right_dot = [ "A" ] } ]
+  in
+  let closure = Parser.closure parser items in
+  print_string (Parser.State.to_string_hum closure);
+  [%expect "[S -> a.A] ; [A -> .c] ; [A -> .b A] "]
 ;;
 
 let%expect_test "test canonical collection basic" =
@@ -558,16 +569,14 @@ let%expect_test "test canonical collection basic" =
     Parser.get_cannonical_collection parser |> Or_error.ok_exn
   in
   print_string
-    (String.concat
-       ~sep:"\n"
-       (List.map cannonical_collection ~f:Parser.State.to_string_hum));
+    (String.concat_lines (List.map cannonical_collection ~f:Parser.State.to_string_hum));
   [%expect
     {|
-      ("[S' -> S.]")
-      ("[S -> a A.]")
-      ("[A -> b A.]")
-      ("[A -> c.]")
-      ("[A -> .c]""[A -> b.A]""[A -> .b A]")
-      ("[S -> a.A]""[A -> .c]""[A -> .b A]")
-      ("[S' -> .S]""[S -> .a A]") |}]
+      [S' -> S.]
+      [S -> a A.]
+      [A -> b A.]
+      [A -> c.]
+      [A -> .c] ; [A -> b.A] ; [A -> .b A]
+      [S -> a.A] ; [A -> .c] ; [A -> .b A]
+      [S' -> .S] ; [S -> .a A] |}]
 ;;

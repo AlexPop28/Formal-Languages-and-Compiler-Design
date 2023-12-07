@@ -40,7 +40,7 @@ module State = struct
   let to_string_hum t =
     Hash_set.to_list t.items
     |> List.map ~f:Lr0_item.to_string_hum
-    |> List.to_string ~f:Fn.id
+    |> String.concat ~sep:" ; "
   ;;
 end
 

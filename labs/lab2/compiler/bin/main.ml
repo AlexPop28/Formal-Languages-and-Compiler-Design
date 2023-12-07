@@ -181,7 +181,6 @@ module Grammar_command = struct
          Ok ())
   ;;
 
-  (* TODO *)
   let is_context_free_command =
     Command.basic_or_error
       ~summary:"Check if a grammar from a file is context-free"
