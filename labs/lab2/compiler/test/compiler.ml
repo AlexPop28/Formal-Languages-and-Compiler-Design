@@ -609,9 +609,100 @@ let%expect_test "test canonical collection basic" =
       [S' -> .S] ; [S -> .a A] |}]
 ;;
 
-let test_lexic () =
-  Sexplib.Sexp.of_string
+let%expect_test "test validate fails for undeclared symbol root" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A" ]
+      ~terminals:[ "a"; "b"; "c" ]
+      ~starting_symbol:"S2" (* TODO: validate productions in the create *)
+      ~productions:[ [ "S" ], [ "a"; "A"; "S" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+  in
+  print_s [%sexp (grammar : Grammar.t Or_error.t)];
+  [%expect {|(Error ((symbol S2) " is undeclared"))|}]
+;;
+
+let%expect_test "test validate fails for undeclared symbol on lhs" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A" ]
+      ~terminals:[ "b"; "c" ]
+      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A2" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+  in
+  print_s [%sexp (grammar : Grammar.t Or_error.t)];
+  [%expect
     {|
+    (Error
+     (((symbol a) " is undeclared") ((symbol A2) " is undeclared")
+      (("(lhs, rhs)" ((A2) (b A))) " does not have nonterminal on the left")))|}]
+;;
+
+let%expect_test "test validate fails for undeclared symbol on rhs" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A" ]
+      ~terminals:[ "b"; "c" ]
+      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~productions:[ [ "S" ], [ "a2"; "1A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+  in
+  print_s [%sexp (grammar : Grammar.t Or_error.t)];
+  [%expect
+    {|
+     (Error (((symbol a2) " is undeclared") ((symbol 1A) " is undeclared")))|}]
+;;
+
+let%expect_test "test validate fails if production doesnt have nonterminal on lhs" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A" ]
+      ~terminals:[ "a"; "b"; "c" ]
+      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~productions:
+        [ [ "S" ], [ "a"; "A" ]
+        ; [ "A" ], [ "b"; "A" ]
+        ; [ "A" ], [ "c" ]
+        ; [ "a" ], [ "a" ]
+        ]
+  in
+  print_s [%sexp (grammar : Grammar.t Or_error.t)];
+  [%expect
+    {|
+    (Error (("(lhs, rhs)" ((a) (a))) " does not have nonterminal on the left"))|}]
+;;
+
+let%expect_test "test validate fails if nonterminal doesn't have expansion" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A"; "B" ]
+      ~terminals:[ "a"; "b"; "c" ]
+      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~productions:[ [ "S" ], [ "a"; "A"; "B" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+  in
+  print_s [%sexp (grammar : Grammar.t Or_error.t)];
+  [%expect {|
+    (Error ((nonterminal B) " does not have any production"))|}]
+;;
+
+let%expect_test "test validate fails if symbol cannot be obtained" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A"; "B" ]
+      ~terminals:[ "a"; "b"; "c"; "d" ]
+      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+  in
+  print_s [%sexp (grammar : Grammar.t Or_error.t)];
+  [%expect
+    {|
+    (Error
+     (((nonterminal B) " does not have any production")
+      ((symbol d) " cannot be obtained") ((symbol B) " cannot be obtained")))|}]
+;;
+
+let%expect_test "test gramatic" =
+  let grammar =
+    Sexplib.Sexp.of_string
+      {|
 
       (
         (non_terminals 
@@ -644,6 +735,8 @@ let test_lexic () =
             expression 
             int_expression
             bool_expression
+            double_expression
+            str_expression
             constant 
             bool_operator 
             int_term 
@@ -654,10 +747,10 @@ let test_lexic () =
           )
         ) 
         (terminals 
-          (a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 "_" "+" "-" "*" "/" "%" "==" "<" "<=" ">" ">=" "=" "!=" 
-           "{" "}" "[" "]" "," "(" ")" ";" " " "\n" "\"" int str double get set read_int read_str read_double print_int print_str print_double if else while)
+          (a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 "_" "+" "-" "*" "/" "%" "==" "<" "<=" ">" ">=" "=" "!=" "."
+           "{" "}" "[" "]" "," "(" ")" ";" " " "\"" int str double get set read_int read_str read_double print_int print_str print_double if else while)
         ) 
-        (starting_symbol S)
+        (starting_symbol program)
         (productions 
           (
             ((letter) (a))
@@ -678,6 +771,7 @@ let test_lexic () =
             ((letter) (o))
             ((letter) (p))
             ((letter) (q))
+            ((letter) (r))
             ((letter) (s))
             ((letter) (t))
             ((letter) (u))
@@ -807,6 +901,7 @@ let test_lexic () =
             ((int_term) (int_factor))
             ((int_term) (int_factor "*" int_term))
             ((int_term) (int_factor "/" int_term))
+            ((int_term) (int_factor "%" int_term))
 
             ((int_factor) (int_constant))
             ((int_factor) (identifier))
@@ -833,5 +928,40 @@ let test_lexic () =
         )
       )
     |}
-  |> Grammar.t_of_sexp
+    |> Grammar.t_of_sexp
+    |> Grammar.validate
+    |> Or_error.map ~f:(fun _ -> ())
+  in
+  print_s [%sexp (grammar : unit Or_error.t)];
+  [%expect "(Ok ())"]
+;;
+
+let%expect_test "test get production fails if lhs contains undeclared symbols" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A" ]
+      ~terminals:[ "a"; "b"; "c" ]
+      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+    |> Or_error.ok_exn
+  in
+  let productions = Grammar.get_productions_of grammar [ "d" ] in
+  print_s [%sexp (productions : _ Or_error.t)];
+  [%expect {|
+    (Error ((symbol d) " is undeclared"))|}]
+;;
+
+let%expect_test "test get production is ok" =
+  let grammar =
+    Grammar.create
+      ~non_terminals:[ "S"; "A" ]
+      ~terminals:[ "a"; "b"; "c" ]
+      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+    |> Or_error.ok_exn
+  in
+  let productions = Grammar.get_productions_of grammar [ "A" ] in
+  print_s [%sexp (productions : _ Or_error.t)];
+  [%expect {|
+    (Ok _)|}]
 ;;

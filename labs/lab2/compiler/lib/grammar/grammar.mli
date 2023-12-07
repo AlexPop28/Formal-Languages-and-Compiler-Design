@@ -15,6 +15,7 @@ val create
   -> productions:(string list * string list) list
   -> t Or_error.t
 
+val validate : t -> t Or_error.t
 val create_from_file : string -> t Or_error.t
 val is_context_free : t -> bool
 val get_non_terminals : t -> string list
