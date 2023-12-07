@@ -529,7 +529,9 @@ let%expect_test "test finite automaton" =
 ;;
 
 let get_parser () =
-  (* TODO: use [create] instead *)
+  (* TODO: refactor tests to provide a sexp representation for the grammars and
+     write a wrapper [with_grammar] that takes it and the test itself as a
+     callback *)
   let grammar : Grammar.t =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
@@ -561,6 +563,18 @@ let%expect_test "test closure basic" =
   let closure = Parser.closure parser items in
   print_string (Parser.State.to_string_hum closure);
   [%expect "[S -> a.A] ; [A -> .c] ; [A -> .b A] "]
+;;
+
+let%expect_test "test goto to empty state" =
+  let parser = get_parser () in
+  let items =
+    Hash_set.of_list
+      (module Parser.Lr0_item)
+      [ { lhp = "S"; left_dot = [ "a" ]; right_dot = [ "A" ] } ]
+  in
+  let state : Parser.State.t = { items } in
+  let result = Parser.goto parser state "B" |> Or_error.ok_exn in
+  print_string (Parser.State.to_string_hum result)
 ;;
 
 let%expect_test "test canonical collection basic" =

@@ -21,3 +21,4 @@ end
 val create : Enhanced_grammar.t -> t
 val get_cannonical_collection : t -> State.t list Or_error.t
 val closure : t -> Lr0_item.t Hash_set.t -> State.t
+val goto : t -> State.t -> string -> State.t Or_error.t

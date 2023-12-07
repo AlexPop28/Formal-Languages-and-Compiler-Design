@@ -9,7 +9,6 @@
   finite_automaton
   grammar
   enhanced_grammar
-  parser
- )
+  parser)
  (preprocess
   (pps ppx_jane)))

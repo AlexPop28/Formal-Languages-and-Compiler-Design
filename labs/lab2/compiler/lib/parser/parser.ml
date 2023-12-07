@@ -66,6 +66,7 @@ let closure t (items : Lr0_item.t Hash_set.t) : State.t =
 ;;
 
 let goto t state symbol =
+  (* TODO: validate that symbol is in the grammar *)
   let%map.Or_error lr0_items =
     State.get_all_lr0_items_right_dot_starting_with_symbol state symbol
     |> Hash_set.to_list
