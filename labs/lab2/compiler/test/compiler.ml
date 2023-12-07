@@ -514,3 +514,7 @@ let%expect_test "test finite automaton" =
   [%expect {| ("accepts \"abbbc\"" true) |}];
   print_s [%message (accepts "abbbbc" : bool)];
   [%expect {| ("accepts \"abbbbc\"" true) |}]
+
+let%expect_test "wrong test to ensure ci actually runs tests" =
+  print_string "* Phasellus neque orci, porta a, aliquet quis, semper a, massa.";
+  [%expect "wrong"]
