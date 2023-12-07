@@ -8,12 +8,15 @@ type t =
   }
 [@@deriving sexp]
 
+(* TODO: *)
+let validate t = Ok t
+
 let create ~non_terminals ~terminals ~starting_symbol ~productions =
-  { non_terminals; terminals; starting_symbol; productions }
+  { non_terminals; terminals; starting_symbol; productions } |> validate
 ;;
 
-let create_from_file ~filename =
-  In_channel.read_all filename |> Sexp.of_string |> t_of_sexp
+let create_from_file filename =
+  In_channel.read_all filename |> Sexp.of_string |> t_of_sexp |> validate
 ;;
 
 let is_context_free t =
@@ -24,3 +27,8 @@ let get_non_terminals t = t.non_terminals
 let get_terminals t = t.terminals
 let get_starting_symbol t = t.starting_symbol
 let get_productions t = t.productions
+
+let get_productions_of t lhs =
+  (* TODO: make sure lhs is a valid sentential form *)
+  List.filter t.productions ~f:(fun (lhp, _) -> List.equal String.equal lhp lhs) |> Ok
+;;

@@ -6,6 +6,10 @@
   core_unix.filename_unix
   core_unix.command_unix
   scanner
-  finite_automaton)
+  finite_automaton
+  grammar
+  enhanced_grammar
+  parser
+ )
  (preprocess
   (pps ppx_jane)))

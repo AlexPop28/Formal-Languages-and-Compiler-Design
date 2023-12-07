@@ -118,11 +118,94 @@ module Scanner_command = struct
   ;;
 end
 
+module Grammar_command = struct
+  let grammar_param =
+    Command.Param.anon (Command.Anons.( %: ) "grammar-file" Filename_unix.arg_type)
+  ;;
+
+  let map_productions_to_string productions =
+    List.map productions ~f:(fun (lhp, rhp) ->
+      let lhp = String.concat lhp ~sep:" " in
+      let rhp = String.concat rhp ~sep:" " in
+      [%string "%{lhp} -> %{rhp}"])
+    |> String.concat ~sep:" ; "
+  ;;
+
+  let describe_command =
+    Command.basic_or_error
+      ~summary:"Describe the grammar from a file"
+      (let%map_open.Command grammar_file = grammar_param
+       and terminals = flag "terminals" no_arg ~doc:"Print the terminals"
+       and non_terminals = flag "non-terminals" no_arg ~doc:"Print the non-terminals"
+       and starting_symbol =
+         flag "starting-symbol" no_arg ~doc:"Print the starting symbol"
+       and productions = flag "productions" no_arg ~doc:"Print the productions"
+       and productions_for_non_terminal =
+         flag
+           "productions-for-nonterminal"
+           (optional string)
+           ~doc:"Print the productions for a given non-terminal"
+       in
+       fun () ->
+         let%bind.Or_error grammar = Grammar.create_from_file grammar_file in
+         if terminals
+         then
+           print_endline
+             ("Terminals: " ^ String.concat ~sep:" " (Grammar.get_terminals grammar));
+         if non_terminals
+         then
+           print_endline
+             ("Non-terminals: "
+              ^ String.concat ~sep:" " (Grammar.get_non_terminals grammar));
+         if starting_symbol
+         then print_endline ("Starting symbol: " ^ Grammar.get_starting_symbol grammar);
+         if productions
+         then
+           print_endline
+             ("Productions: "
+              ^ map_productions_to_string (Grammar.get_productions grammar));
+         let%bind.Or_error () =
+           match productions_for_non_terminal with
+           | Some non_terminal ->
+             let%bind.Or_error productions =
+               Grammar.get_productions_of grammar [ non_terminal ]
+             in
+             print_endline
+               ("Productions of "
+                ^ non_terminal
+                ^ ": "
+                ^ map_productions_to_string productions);
+             Ok ()
+           | None -> Ok ()
+         in
+         Ok ())
+  ;;
+
+  (* TODO *)
+  let is_context_free_command =
+    Command.basic_or_error
+      ~summary:"Check if a grammar from a file is context-free"
+      (let%map_open.Command grammar_file = grammar_param in
+       fun () ->
+         let%bind.Or_error grammar = Grammar.create_from_file grammar_file in
+         let is_cfg = Grammar.is_context_free grammar in
+         print_s [%message (is_cfg : bool)];
+         Ok ())
+  ;;
+
+  let command =
+    Command.group
+      ~summary:"Commands for grammars"
+      [ "describe", describe_command; "is-cfg", is_context_free_command ]
+  ;;
+end
+
 let () =
   Command_unix.run
     (Command.group
        ~summary:"Helper commands"
        [ "scan", Scanner_command.command
        ; "finite-automaton", Finite_automaton_command.command
+       ; "grammar", Grammar_command.command
        ])
 ;;

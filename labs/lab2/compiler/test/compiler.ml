@@ -529,6 +529,7 @@ let%expect_test "test finite automaton" =
 ;;
 
 let get_parser () =
+  (* TODO: use [create] instead *)
   let grammar : Grammar.t =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
@@ -539,6 +540,8 @@ let get_parser () =
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
   Parser.create grammar
 ;;
+
+let%expect_test "TODO [Grammar.create]" = ()
 
 let%expect_test "test closure on empty set" =
   let parser = get_parser () in
