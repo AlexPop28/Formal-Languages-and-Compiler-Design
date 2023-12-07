@@ -574,7 +574,21 @@ let%expect_test "test goto to empty state" =
   in
   let state : Parser.State.t = { items } in
   let result = Parser.goto parser state "B" |> Or_error.ok_exn in
-  print_string (Parser.State.to_string_hum result)
+  print_string (Parser.State.to_string_hum result);
+  [%expect ""]
+;;
+
+let%expect_test "test goto" =
+  let parser = get_parser () in
+  let items =
+    Hash_set.of_list
+      (module Parser.Lr0_item)
+      [ { lhp = "S"; left_dot = []; right_dot = [ "a"; "A" ] } ]
+  in
+  let state : Parser.State.t = { items } in
+  let result = Parser.goto parser state "a" |> Or_error.ok_exn in
+  print_string (Parser.State.to_string_hum result);
+  [%expect "[S -> a.A] ; [A -> .c] ; [A -> .b A]"]
 ;;
 
 let%expect_test "test canonical collection basic" =
