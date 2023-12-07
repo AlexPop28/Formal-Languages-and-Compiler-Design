@@ -961,7 +961,7 @@ let%expect_test "test get production is ok" =
     |> Or_error.ok_exn
   in
   let productions = Grammar.get_productions_of grammar [ "A" ] in
-  print_s [%sexp (productions : _ Or_error.t)];
+  print_s [%sexp (productions : ((string list * string list) list) Or_error.t)];
   [%expect {|
-    (Ok _)|}]
+    (Ok (((A) (b A)) ((A) (c))))|}]
 ;;

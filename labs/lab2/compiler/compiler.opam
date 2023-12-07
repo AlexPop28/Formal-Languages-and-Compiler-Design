@@ -26,8 +26,6 @@ build: [
     "@install"
     "@runtest" {with-test}
     "@doc" {with-doc}
-    "core"
-    "re2"
   ]
 ]
 dev-repo: "git+https://github.com/username/reponame.git"
