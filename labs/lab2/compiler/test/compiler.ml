@@ -699,7 +699,7 @@ let%expect_test "test validate fails if symbol cannot be obtained" =
       ((symbol d) " cannot be obtained") ((symbol B) " cannot be obtained")))|}]
 ;;
 
-let%expect_test "test gramatic" =
+let get_language_grammar = 
   let grammar =
     Sexplib.Sexp.of_string
       {|
@@ -930,8 +930,12 @@ let%expect_test "test gramatic" =
     |}
     |> Grammar.t_of_sexp
     |> Grammar.validate
-    |> Or_error.map ~f:(fun _ -> ())
   in
+  grammar
+;;
+
+let%expect_test "test gramatic" =
+  let grammar = get_language_grammar |> Or_error.map ~f:(fun _ -> ()) in
   print_s [%sexp (grammar : unit Or_error.t)];
   [%expect "(Ok ())"]
 ;;
@@ -964,4 +968,27 @@ let%expect_test "test get production is ok" =
   print_s [%sexp (productions : ((string list * string list) list) Or_error.t)];
   [%expect {|
     (Ok (((A) (b A)) ((A) (c))))|}]
+;;
+
+
+let%expect_test "test canonical collection our grammar" =
+  let grammar = get_language_grammar  
+    |> Or_error.ok_exn
+  in
+  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+  let parser = Parser.create grammar in
+  let cannonical_collection =
+    Parser.get_cannonical_collection parser |> Or_error.ok_exn
+  in
+  print_string
+    (String.concat_lines (List.map cannonical_collection ~f:Parser.State.to_string_hum));
+  [%expect
+    {|
+      [S' -> S.]
+      [S -> a A.]
+      [A -> b A.]
+      [A -> c.]
+      [A -> .c] ; [A -> b.A] ; [A -> .b A]
+      [S -> a.A] ; [A -> .c] ; [A -> .b A]
+      [S' -> .S] ; [S -> .a A] |}]
 ;;

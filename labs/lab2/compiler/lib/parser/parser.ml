@@ -18,7 +18,7 @@ module Lr0_item = struct
   let create_from_production lhp rhp = { lhp; left_dot = []; right_dot = rhp }
 
   let to_string_hum t =
-    let left_dot = String.concat t.left_dot ~sep:" " |> String.rev in
+    let left_dot = List.rev t.left_dot |> String.concat ~sep:" " in
     let right_dot = String.concat t.right_dot ~sep:" " in
     [%string "[%{t.lhp} -> %{left_dot}.%{right_dot}]"]
   ;;
@@ -48,7 +48,7 @@ type t = { grammar : Enhanced_grammar.t }
 
 let create grammar = { grammar }
 
-let closure t (items : Lr0_item.t Hash_set.t) : State.t =
+let closure_one_step t (items : Lr0_item.t Hash_set.t) : State.t =
   (* print_s [%message "Making closure of:" (Hash_set.to_list items : Lr0_item.t list)]; *)
   { items =
       Hash_set.fold items ~init:(Hash_set.copy items) ~f:(fun acc item ->
@@ -64,6 +64,14 @@ let closure t (items : Lr0_item.t Hash_set.t) : State.t =
         | _ -> acc)
   }
 ;;
+
+let rec closure t (items: Lr0_item.t Hash_set.t) : State.t = 
+  let next_step_closure = closure_one_step t items in 
+  let curr_state: State.t = {items} in 
+  if State.equal curr_state next_step_closure then 
+    curr_state 
+  else 
+    closure t next_step_closure.items
 
 let goto t state symbol =
   (* TODO: validate that symbol is in the grammar *)
