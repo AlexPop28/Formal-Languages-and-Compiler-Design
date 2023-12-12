@@ -3,6 +3,7 @@ open! Core
 (* TODO open Import *)
 module State = State
 module Lr0_item = Lr0_item
+module Parser_output = Parser_output
 
 type t = { grammar : Enhanced_grammar.t }
 

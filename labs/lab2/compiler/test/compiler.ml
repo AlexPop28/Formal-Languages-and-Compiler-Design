@@ -834,8 +834,7 @@ let get_language_grammar =
 
 
             ((program) (statement))
-            ((program) (statement program))
-
+            ((program) (program statement))
             ((statement) (variable_declaration ";"))
             ((statement) (function_call ";"))
             ((statement) (assignment ";"))
@@ -970,7 +969,16 @@ let%expect_test "test get production is ok" =
 ;;
 
 let%expect_test "test canonical collection our grammar" =
-  let grammar = get_language_grammar |> Or_error.ok_exn in
+  let grammar : Grammar.t =
+    { non_terminals = [ "S"; "A" ]
+    ; terminals = [ "a"; "b"; "c" ]
+    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+    }
+  in
+  (*let grammar = get_language_grammar
+    |> Or_error.ok_exn
+    in*)
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
   let parser = Parser.create grammar in
   let cannonical_collection =
@@ -980,5 +988,27 @@ let%expect_test "test canonical collection our grammar" =
     let action = Parser.State.get_action state grammar in
     print_s
       [%sexp (action : (Parser.State.Action.t, Parser.State.Action.t list) Result.t)]);
+  [%expect {||}]
+;;
+
+(*TODO test it fails on invalid output bands*)
+let%expect_test "test parser output works toy grammar" =
+  let grammar : Grammar.t =
+    { non_terminals = [ "S"; "A" ]
+    ; terminals = [ "a"; "b"; "c" ]
+    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+    }
+  in
+  (*
+     abbbbc
+     1 2 2 2 2 3
+     3 2 2 2 2 1
+  *)
+  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+  let parser_output =
+    Parser.Parser_output.create grammar [ 3; 2; 2; 2; 2; 1 ] |> ok_exn
+  in
+  print_string (Parser.Parser_output.to_string parser_output);
   [%expect {||}]
 ;;
