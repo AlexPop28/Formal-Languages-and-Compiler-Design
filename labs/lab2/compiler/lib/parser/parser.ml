@@ -4,6 +4,7 @@ open! Core
 module State = State
 module Lr0_item = Lr0_item
 module Parser_output = Parser_output
+module Canonical_collection = Canonical_collection
 
 type t = { grammar : Enhanced_grammar.t }
 
@@ -53,41 +54,33 @@ let get_cannonical_collection_and_parsing_table t =
     |> closure t
   in
   let symbols = t.grammar.terminals @ t.grammar.non_terminals in
-  let state_number = ref 0 in
-  let cannonical_collection = ref [] in
+  let canonical_collection = Canonical_collection.create () in
   let rec dfs state =
-    let current_state_number = !state_number in
-    cannonical_collection := (state, !state_number) :: !cannonical_collection;
-    state_number := !state_number + 1;
-    let%bind.Or_error _ =
-      List.map symbols ~f:(fun symbol ->
-        let%bind.Or_error next_state = goto t state symbol in
-        if Hash_set.is_empty next_state.items
-        then Ok ()
-        else (
-          let%bind.Or_error _id =
-            let p =
-              List.find !cannonical_collection ~f:(fun (s, _) -> State.equal s next_state)
-            in
-            match p with
-            | Some (_, id) -> Ok id
-            | None -> dfs next_state
-          in
-          Ok () (* TODO: set goto (current_state_number, symbol) = id) *)))
-      |> Or_error.all
-    in
-    Ok current_state_number
+    let current_id = (Canonical_collection.add_state canonical_collection state) in
+    match current_id with 
+    | `Duplicate id -> Ok id
+    | `Ok id -> (
+      let%bind.Or_error _ =
+        List.map symbols ~f:(fun symbol ->
+          let%bind.Or_error next_state = goto t state symbol in
+          if Hash_set.is_empty next_state.items
+          then Ok ()
+          else (
+            let%bind.Or_error _id = dfs next_state in
+            Ok () (* TODO: set goto (current_state_number, symbol) = id) *)))
+        |> Or_error.all
+      in
+      Ok id
+    )
   in
   let%bind.Or_error _root_state_number = dfs s0 in
-  let result = Array.create ~len:!state_number s0 in
-  List.iter !cannonical_collection ~f:(fun (state, id) -> Array.set result id state);
   (* TODO: return the parsing table *)
-  Ok (result, ())
+  Ok (canonical_collection, ())
 ;;
 
 module For_testing = struct
   let get_cannonical_collection t =
     let%bind.Or_error result = get_cannonical_collection_and_parsing_table t in
-    fst result |> Array.to_list |> Ok
+    fst result |> Ok
   ;;
 end
