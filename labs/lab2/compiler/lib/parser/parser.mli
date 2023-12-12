@@ -13,18 +13,24 @@ end
 
 module State : sig
   type t = { items : Lr0_item.t Hash_set.t }
-  type action = 
-    | Shift 
-    | Reduce of (Lr0_item.t)
-    | Accept
-  [@@deriving sexp]
+
+  module Action : sig
+    type t =
+      | Shift
+      | Reduce of Lr0_item.t
+      | Accept
+    [@@deriving sexp]
+  end
 
   val sexp_of_t : t -> Sexp.t
   val to_string_hum : t -> string
-  val get_action: t -> Enhanced_grammar.t -> (action, action list) result
+  val get_action : t -> Enhanced_grammar.t -> (Action.t, Action.t list) result
 end
 
 val create : Enhanced_grammar.t -> t
-val get_cannonical_collection : t -> State.t list Or_error.t
 val closure : t -> Lr0_item.t Hash_set.t -> State.t
 val goto : t -> State.t -> string -> State.t Or_error.t
+
+module For_testing : sig
+  val get_cannonical_collection : t -> State.t list Or_error.t
+end

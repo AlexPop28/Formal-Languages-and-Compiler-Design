@@ -55,10 +55,10 @@ module State = struct
     let action_list = ref [] in
     if Hash_set.find t.items ~f:(fun lr0_item -> not (List.is_empty lr0_item.right_dot))
        |> Option.is_some
-    then action_list := [ Shift ] @ !action_list;
+    then action_list := [ Action.Shift ] @ !action_list;
     Hash_set.iter t.items ~f:(fun lr0_item ->
       if List.is_empty lr0_item.right_dot
-      then action_list := [ Reduce lr0_item ] @ !action_list);
+      then action_list := [ Action.Reduce lr0_item ] @ !action_list);
     let start = grammar.starting_symbol in
     if Hash_set.find t.items ~f:(fun lr0_item ->
          String.( = ) start lr0_item.lhp && List.is_empty lr0_item.right_dot)
@@ -110,7 +110,7 @@ let goto t state symbol =
   Hash_set.of_list (module Lr0_item) lr0_items |> closure t
 ;;
 
-let get_cannonical_collection t =
+let get_cannonical_collection_and_parsing_table t =
   let s0 =
     Enhanced_grammar.get_productions_of t.grammar t.grammar.starting_symbol
     |> List.map ~f:(Lr0_item.create_from_production t.grammar.starting_symbol)
@@ -127,29 +127,32 @@ let get_cannonical_collection t =
     let%bind.Or_error _ =
       List.map symbols ~f:(fun symbol ->
         let%bind.Or_error next_state = goto t state symbol in
-
-        if next state is empty then Ok ()
-        else (
-
-        )
-
-
-
-
-
-
-
-        if Hash_set.is_empty next_state.items then Ok ()
-        else (
-          let id =
-            if
-           List.mem !cannonical_collection ~equal:(fun (s, _) -> State.equal s next_state)
+        if Hash_set.is_empty next_state.items
         then Ok ()
-        else dfs next_state)
+        else (
+          let%bind.Or_error _id =
+            let p =
+              List.find !cannonical_collection ~f:(fun (s, _) -> State.equal s next_state)
+            in
+            match p with
+            | Some (_, id) -> Ok id
+            | None -> dfs next_state
+          in
+          Ok () (* TODO: set goto (current_state_number, symbol) = id) *)))
       |> Or_error.all
     in
-    Ok ()
+    Ok current_state_number
   in
-  let%bind.Or_error () = dfs s0 in
-  Ok !cannonical_collection
+  let%bind.Or_error _root_state_number = dfs s0 in
+  let result = Array.create ~len:!state_number s0 in
+  List.iter !cannonical_collection ~f:(fun (state, id) -> Array.set result id state);
+  (* TODO: return the parsing table *)
+  Ok (result, ())
 ;;
+
+module For_testing = struct
+  let get_cannonical_collection t =
+    let%bind.Or_error result = get_cannonical_collection_and_parsing_table t in
+    fst result |> Array.to_list |> Ok
+  ;;
+end

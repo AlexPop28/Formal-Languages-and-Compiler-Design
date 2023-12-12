@@ -594,19 +594,19 @@ let%expect_test "test goto" =
 let%expect_test "test canonical collection basic" =
   let parser = get_parser () in
   let cannonical_collection =
-    Parser.get_cannonical_collection parser |> Or_error.ok_exn
+    Parser.For_testing.get_cannonical_collection parser |> Or_error.ok_exn
   in
   print_string
     (String.concat_lines (List.map cannonical_collection ~f:Parser.State.to_string_hum));
   [%expect
     {|
-      [S' -> S.]
-      [S -> a A.]
-      [A -> b A.]
-      [A -> c.]
-      [A -> .c] ; [A -> b.A] ; [A -> .b A]
+      [S' -> .S] ; [S -> .a A]
       [S -> a.A] ; [A -> .c] ; [A -> .b A]
-      [S' -> .S] ; [S -> .a A] |}]
+      [A -> .c] ; [A -> b.A] ; [A -> .b A]
+      [A -> c.]
+      [A -> b A.]
+      [S -> a A.]
+      [S' -> S.] |}]
 ;;
 
 let%expect_test "test validate fails for undeclared symbol root" =
@@ -974,19 +974,11 @@ let%expect_test "test canonical collection our grammar" =
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
   let parser = Parser.create grammar in
   let cannonical_collection =
-    Parser.get_cannonical_collection parser |> Or_error.ok_exn
+    Parser.For_testing.get_cannonical_collection parser |> Or_error.ok_exn
   in
-  List.iter cannonical_collection ~f: (fun state -> 
-    let action = Parser.State.get_action grammar state in 
-    print_s [%sexp (action: ((Parser.State.action, Parser.State.action list) result))];
-  );
-  [%expect
-    {|
-      [S' -> S.]
-      [S -> a A.]
-      [A -> b A.]
-      [A -> c.]
-      [A -> .c] ; [A -> b.A] ; [A -> .b A]
-      [S -> a.A] ; [A -> .c] ; [A -> .b A]
-      [S' -> .S] ; [S -> .a A] |}]
+  List.iter cannonical_collection ~f:(fun state ->
+    let action = Parser.State.get_action state grammar in
+    print_s
+      [%sexp (action : (Parser.State.Action.t, Parser.State.Action.t list) Result.t)]);
+  [%expect {||}]
 ;;
