@@ -4,7 +4,7 @@ type t =
   { non_terminals : string list
   ; terminals : string list
   ; starting_symbol : string
-  ; productions : (string * string list) list
+  ; productions : (string * string list) array
   }
 
 (** Returns [Error.t] if the grammar is not context free *)
