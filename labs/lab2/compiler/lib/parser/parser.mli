@@ -13,9 +13,15 @@ end
 
 module State : sig
   type t = { items : Lr0_item.t Hash_set.t }
+  type action = 
+    | Shift 
+    | Reduce of (Lr0_item.t)
+    | Accept
+  [@@deriving sexp]
 
   val sexp_of_t : t -> Sexp.t
   val to_string_hum : t -> string
+  val get_action: t -> Enhanced_grammar.t -> (action, action list) result
 end
 
 val create : Enhanced_grammar.t -> t

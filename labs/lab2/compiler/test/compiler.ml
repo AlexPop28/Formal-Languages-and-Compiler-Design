@@ -980,8 +980,10 @@ let%expect_test "test canonical collection our grammar" =
   let cannonical_collection =
     Parser.get_cannonical_collection parser |> Or_error.ok_exn
   in
-  print_string
-    (String.concat_lines (List.map cannonical_collection ~f:Parser.State.to_string_hum));
+  List.iter cannonical_collection ~f: (fun state -> 
+    let action = Parser.State.get_action grammar state in 
+    print_s [%sexp (action: ((Parser.State.action, Parser.State.action list) result))];
+  );
   [%expect
     {|
       [S' -> S.]
