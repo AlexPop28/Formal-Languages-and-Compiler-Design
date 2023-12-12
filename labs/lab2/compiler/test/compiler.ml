@@ -699,64 +699,63 @@ let%expect_test "test validate fails if symbol cannot be obtained" =
       ((symbol d) " cannot be obtained") ((symbol B) " cannot be obtained")))|}]
 ;;
 
-let get_language_grammar = 
+let get_language_grammar =
   let grammar =
     Sexplib.Sexp.of_string
       {|
 
       (
-        (non_terminals 
+        (non_terminals
           (
-            identifier 
-            identifier_after_start 
-            letter 
-            digit 
-            int_constant 
-            int_after_start 
-            positive_int 
-            non_zero_digit 
-            sign 
-            str_constant_inside 
-            str_constant 
+            identifier
+            identifier_after_start
+            letter
+            digit
+            int_constant
+            int_after_start
+            positive_int
+            non_zero_digit
+            sign
+            str_constant_inside
+            str_constant
             double_constant
-           
-            program 
-            statement 
-            variable_declaration 
-            function_call 
+
+            program
+            statement
+            variable_declaration
+            function_call
             assignment
             if_expression
             while_expression
             type
-            get_call 
-            set_call 
-            read_call 
-            print_call 
-            expression 
+            get_call
+            set_call
+            read_call
+            print_call
+            expression
             int_expression
             bool_expression
             double_expression
             str_expression
-            constant 
-            bool_operator 
-            int_term 
-            int_factor 
-            double_term 
-            double_factor 
-            str_term 
+            constant
+            bool_operator
+            int_term
+            int_factor
+            double_term
+            double_factor
+            str_term
           )
-        ) 
-        (terminals 
+        )
+        (terminals
           (a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 "_" "+" "-" "*" "/" "%" "==" "<" "<=" ">" ">=" "=" "!=" "."
            "{" "}" "[" "]" "," "(" ")" ";" " " "\"" int str double get set read_int read_str read_double print_int print_str print_double if else while)
-        ) 
+        )
         (starting_symbol program)
-        (productions 
+        (productions
           (
             ((letter) (a))
             ((letter) (b))
             ((letter) (c))
-            ((letter) (d))
             ((letter) (d))
             ((letter) (e))
             ((letter) (f))
@@ -790,11 +789,11 @@ let get_language_grammar =
             ((non_zero_digit) (7))
             ((non_zero_digit) (8))
             ((non_zero_digit) (9))
-            
+
             ((digit) (0))
             ((digit) (non_zero_digit))
-            
-            ((sign) (+)) 
+
+            ((sign) (+))
             ((sign) (-))
 
             ((identifier_after_start) (letter))
@@ -808,7 +807,7 @@ let get_language_grammar =
             ((identifier) (_))
             ((identifier) (letter identifier_after_start))
             ((identifier) (_ identifier_after_start))
-            
+
             ((int_after_start) (digit))
             ((int_after_start) (digit int_after_start))
 
@@ -821,7 +820,7 @@ let get_language_grammar =
             ((str_constant_inside) (letter))
             ((str_constant_inside) (digit))
             ((str_constant_inside) ("_"))
-            ((str_constant_inside) (" ")) 
+            ((str_constant_inside) (" "))
             ((str_constant_inside) (letter str_constant_inside))
             ((str_constant_inside) (digit str_constant_inside))
             ((str_constant_inside) ("_" str_constant_inside))
@@ -836,13 +835,13 @@ let get_language_grammar =
 
             ((program) (statement))
             ((program) (statement program))
-        
+
             ((statement) (variable_declaration ";"))
             ((statement) (function_call ";"))
             ((statement) (assignment ";"))
             ((statement) (if_expression))
             ((statement) (while_expression))
-            
+
             ((type) (int))
             ((type) (str))
             ((type) (double))
@@ -871,13 +870,13 @@ let get_language_grammar =
 
             ((if_expression) (if "(" bool_expression ")" "{" program "}"))
             ((if_expression) (if "(" bool_expression ")" "{" program "}" else "{" program "}"))
-            
+
             ((while_expression) (while "(" bool_expression ")" "{" program "}"))
 
             ((constant) (int_constant))
             ((constant) (str_constant))
             ((constant) (double_constant))
-  
+
             ((bool_operator) ("=="))
             ((bool_operator) ("!="))
             ((bool_operator) ("<"))
@@ -897,7 +896,7 @@ let get_language_grammar =
             ((int_expression) (int_term))
             ((int_expression) (int_term "+" int_expression))
             ((int_expression) (int_term "-" int_expression))
-            
+
             ((int_term) (int_factor))
             ((int_term) (int_factor "*" int_term))
             ((int_term) (int_factor "/" int_term))
@@ -906,11 +905,11 @@ let get_language_grammar =
             ((int_factor) (int_constant))
             ((int_factor) (identifier))
             ((int_factor) ("(" int_expression ")"))
-            
+
             ((double_expression) (double_term))
             ((double_expression) (double_term "+" double_expression))
             ((double_expression) (double_term "-" double_expression))
-            
+
             ((double_term) (double_factor))
             ((double_term) (double_factor "*" int_term))
             ((double_term) (double_factor "/" int_term))
@@ -965,16 +964,13 @@ let%expect_test "test get production is ok" =
     |> Or_error.ok_exn
   in
   let productions = Grammar.get_productions_of grammar [ "A" ] in
-  print_s [%sexp (productions : ((string list * string list) list) Or_error.t)];
+  print_s [%sexp (productions : (string list * string list) list Or_error.t)];
   [%expect {|
     (Ok (((A) (b A)) ((A) (c))))|}]
 ;;
 
-
 let%expect_test "test canonical collection our grammar" =
-  let grammar = get_language_grammar  
-    |> Or_error.ok_exn
-  in
+  let grammar = get_language_grammar |> Or_error.ok_exn in
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
   let parser = Parser.create grammar in
   let cannonical_collection =

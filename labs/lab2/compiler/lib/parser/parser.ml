@@ -26,11 +26,14 @@ end
 
 module State = struct
   type t = { items : Lr0_item.t Hash_set.t }
-  type action = 
-    | Shift 
-    | Reduce of (Lr0_item.t)
-    | Accept
-  [@@deriving sexp]
+
+  module Action = struct
+    type t =
+      | Shift
+      | Reduce of Lr0_item.t
+      | Accept
+    [@@deriving sexp]
+  end
 
   let get_all_lr0_items_right_dot_starting_with_symbol t symbol =
     Hash_set.filter t.items ~f:(fun item ->
@@ -48,22 +51,23 @@ module State = struct
     |> String.concat ~sep:" ; "
   ;;
 
-  let get_action t (grammar: Enhanced_grammar.t) = 
-    let action_list = ref [] in 
-    if Hash_set.find t.items ~f: (fun lr0_item -> not (List.is_empty lr0_item.right_dot)) |> Option.is_some then 
-      action_list := [Shift] @ !action_list;
-    Hash_set.iter t.items ~f: (fun lr0_item -> 
-      if (List.is_empty lr0_item.right_dot) then 
-        action_list := [Reduce(lr0_item)] @ !action_list;
-    );
-
-    let start = grammar.starting_symbol in 
-    if Hash_set.find t.items ~f: (fun lr0_item -> (String.(=) start lr0_item.lhp) && (List.is_empty lr0_item.right_dot)) |> Option.is_some then 
-      action_list := [Accept];
-    match !action_list with 
-    | [action] -> Ok action 
+  let get_action t (grammar : Enhanced_grammar.t) =
+    let action_list = ref [] in
+    if Hash_set.find t.items ~f:(fun lr0_item -> not (List.is_empty lr0_item.right_dot))
+       |> Option.is_some
+    then action_list := [ Shift ] @ !action_list;
+    Hash_set.iter t.items ~f:(fun lr0_item ->
+      if List.is_empty lr0_item.right_dot
+      then action_list := [ Reduce lr0_item ] @ !action_list);
+    let start = grammar.starting_symbol in
+    if Hash_set.find t.items ~f:(fun lr0_item ->
+         String.( = ) start lr0_item.lhp && List.is_empty lr0_item.right_dot)
+       |> Option.is_some
+    then action_list := [ Accept ];
+    match !action_list with
+    | [ action ] -> Ok action
     | action_list -> Error action_list
-
+  ;;
 end
 
 type t = { grammar : Enhanced_grammar.t }
@@ -87,13 +91,13 @@ let closure_one_step t (items : Lr0_item.t Hash_set.t) : State.t =
   }
 ;;
 
-let rec closure t (items: Lr0_item.t Hash_set.t) : State.t = 
-  let next_step_closure = closure_one_step t items in 
-  let curr_state: State.t = {items} in 
-  if State.equal curr_state next_step_closure then 
-    curr_state 
-  else 
-    closure t next_step_closure.items
+let rec closure t (items : Lr0_item.t Hash_set.t) : State.t =
+  let next_step_closure = closure_one_step t items in
+  let curr_state : State.t = { items } in
+  if State.equal curr_state next_step_closure
+  then curr_state
+  else closure t next_step_closure.items
+;;
 
 let goto t state symbol =
   (* TODO: validate that symbol is in the grammar *)
@@ -114,14 +118,32 @@ let get_cannonical_collection t =
     |> closure t
   in
   let symbols = t.grammar.terminals @ t.grammar.non_terminals in
+  let state_number = ref 0 in
   let cannonical_collection = ref [] in
   let rec dfs state =
-    cannonical_collection := state :: !cannonical_collection;
+    let current_state_number = !state_number in
+    cannonical_collection := (state, !state_number) :: !cannonical_collection;
+    state_number := !state_number + 1;
     let%bind.Or_error _ =
       List.map symbols ~f:(fun symbol ->
         let%bind.Or_error next_state = goto t state symbol in
-        if Hash_set.is_empty next_state.items
-           || List.mem !cannonical_collection ~equal:State.equal next_state
+
+        if next state is empty then Ok ()
+        else (
+
+        )
+
+
+
+
+
+
+
+        if Hash_set.is_empty next_state.items then Ok ()
+        else (
+          let id =
+            if
+           List.mem !cannonical_collection ~equal:(fun (s, _) -> State.equal s next_state)
         then Ok ()
         else dfs next_state)
       |> Or_error.all
