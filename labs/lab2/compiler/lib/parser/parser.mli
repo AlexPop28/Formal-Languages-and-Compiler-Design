@@ -17,7 +17,7 @@ module State : sig
   module Action : sig
     type t =
       | Shift
-      | Reduce of Lr0_item.t
+      | Reduce of (string * string list)
       | Accept
     [@@deriving sexp]
   end
