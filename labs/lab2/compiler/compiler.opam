@@ -12,9 +12,9 @@ bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.11"}
-  "odoc" {with-doc}
   "core"
   "re2"
+  "odoc" {with-doc}
 ]
 build: [
   ["dune" "subst"] {dev}
