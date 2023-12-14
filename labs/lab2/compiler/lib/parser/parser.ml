@@ -103,13 +103,16 @@ let rec parse_ t parsing_table work input output =
          Enhanced_grammar.get_index_of_production t.grammar (lhp, rhp)
        in
        let prod, rem_work = List.split_n work (List.length rhp) in
-       if List.exists2_exn (List.rev prod) rhp ~f:(fun (a, _) b -> String.(a = b))
+       if not (List.exists2_exn (List.rev prod) rhp ~f:(fun (a, _) b -> String.(a = b)))
        then
          Or_error.error_s
            [%message
              "Trying to reduce but the working stack does not contain the right hand \
               side of the production"
                (rhp : string list)
+               (lhp: string)
+               (prod: (string * int) list)
+               (rem_work: (string * int) list)
                (work : (string * int) list)]
        else (
          let%bind.Or_error new_state =

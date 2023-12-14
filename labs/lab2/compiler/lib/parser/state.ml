@@ -36,7 +36,7 @@ let get_action t (grammar : Enhanced_grammar.t) =
   then action_list := Action.Shift :: !action_list;
   Hash_set.iter t.items ~f:(fun lr0_item ->
     if List.is_empty lr0_item.right_dot
-    then action_list := Action.Reduce (lr0_item.lhp, lr0_item.left_dot) :: !action_list);
+    then action_list := Action.Reduce (lr0_item.lhp, List.rev lr0_item.left_dot) :: !action_list);
   let start = grammar.starting_symbol in
   if Hash_set.find t.items ~f:(fun lr0_item ->
        String.( = ) start lr0_item.lhp && List.is_empty lr0_item.right_dot)

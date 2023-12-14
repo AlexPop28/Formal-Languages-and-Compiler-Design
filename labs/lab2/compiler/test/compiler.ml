@@ -1015,3 +1015,36 @@ let%expect_test "test parser output works toy grammar" =
     |  10. |          A |  11 |   - |
     |  11. |          c |   - |   - | |}]
 ;;
+
+let%expect_test "test parser works on toy grammar" =
+  let grammar : Grammar.t =
+    { non_terminals = [ "S"; "A" ]
+    ; terminals = [ "a"; "b"; "c" ]
+    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+    }
+  in
+  (*
+     abbbbc
+     1 2 2 2 2 3
+  *)
+  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+  let parser = Parser.create grammar in 
+  let parser_output = Parser.parse parser ["a"; "b"; "b"; "b"; "b"; "c"] |> ok_exn
+  in
+  print_string (Parser.Parser_output.to_string parser_output);
+  [%expect
+    {|
+    |   0. |          S |   1 |   - |
+    |   1. |          a |   - |   2 |
+    |   2. |          A |   3 |   - |
+    |   3. |          b |   - |   4 |
+    |   4. |          A |   5 |   - |
+    |   5. |          b |   - |   6 |
+    |   6. |          A |   7 |   - |
+    |   7. |          b |   - |   8 |
+    |   8. |          A |   9 |   - |
+    |   9. |          b |   - |  10 |
+    |  10. |          A |  11 |   - |
+    |  11. |          c |   - |   - | |}]
+;;
