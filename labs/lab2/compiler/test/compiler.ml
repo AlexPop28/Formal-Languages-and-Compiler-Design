@@ -1029,9 +1029,8 @@ let%expect_test "test parser works on toy grammar" =
      1 2 2 2 2 3
   *)
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-  let parser = Parser.create grammar in 
-  let parser_output = Parser.parse parser ["a"; "b"; "b"; "b"; "b"; "c"] |> ok_exn
-  in
+  let parser = Parser.create grammar in
+  let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
   print_string (Parser.Parser_output.to_string parser_output);
   [%expect
     {|
@@ -1047,4 +1046,51 @@ let%expect_test "test parser works on toy grammar" =
     |   9. |          b |   - |  10 |
     |  10. |          A |  11 |   - |
     |  11. |          c |   - |   - | |}]
+;;
+
+let%expect_test "test parser on wrong input grammar" =
+  let grammar : Grammar.t =
+    { non_terminals = [ "S"; "A" ]
+    ; terminals = [ "a"; "b"; "c" ]
+    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
+    }
+  in
+  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+  let parser = Parser.create grammar in
+  let parser_output = Parser.parse parser [ "a"; "b"; "b"; "d"; "b"; "c" ] in
+  print_s [%sexp (parser_output : Parser.Parser_output.t Or_error.t)];
+  [%expect {|
+    (Error ("Goto to empty state" (state 2) d)) |}]
+;;
+
+let%expect_test "test parser works on more serious grammar" =
+  let grammar : Grammar.t =
+    { non_terminals = [ "S" ]
+    ; terminals = [ "a"; "b"; "c"; "d" ]
+    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; productions =
+        [ [ "S" ], [ "a"; "S"; "b" ]; [ "S" ], [ "a"; "S"; "c" ]; [ "S" ], [ "d"; "b" ] ]
+    }
+  in
+  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+  let parser = Parser.create grammar in
+  let parser_output =
+    Parser.parse parser [ "a"; "a"; "a"; "d"; "b"; "c"; "b"; "b" ] |> ok_exn
+  in
+  print_string (Parser.Parser_output.to_string parser_output);
+  [%expect
+    {|
+    |   0. |          S |   1 |   - |
+    |   1. |          a |   - |   2 |
+    |   2. |          S |   4 |   3 |
+    |   3. |          b |   - |   - |
+    |   4. |          a |   - |   5 |
+    |   5. |          S |   7 |   6 |
+    |   6. |          b |   - |   - |
+    |   7. |          a |   - |   8 |
+    |   8. |          S |  10 |   9 |
+    |   9. |          c |   - |   - |
+    |  10. |          d |   - |  11 |
+    |  11. |          b |   - |   - | |}]
 ;;

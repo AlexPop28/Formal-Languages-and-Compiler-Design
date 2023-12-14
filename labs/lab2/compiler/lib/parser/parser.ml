@@ -110,9 +110,9 @@ let rec parse_ t parsing_table work input output =
              "Trying to reduce but the working stack does not contain the right hand \
               side of the production"
                (rhp : string list)
-               (lhp: string)
-               (prod: (string * int) list)
-               (rem_work: (string * int) list)
+               (lhp : string)
+               (prod : (string * int) list)
+               (rem_work : (string * int) list)
                (work : (string * int) list)]
        else (
          let%bind.Or_error new_state =

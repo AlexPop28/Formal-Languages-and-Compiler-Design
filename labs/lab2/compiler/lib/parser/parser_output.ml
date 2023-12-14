@@ -1,6 +1,6 @@
 open! Core
 
-type t = (string * int option * int option) array
+type t = (string * int option * int option) array [@@deriving sexp]
 
 (* TODO: refactor this function *)
 let create grammar output_band =
