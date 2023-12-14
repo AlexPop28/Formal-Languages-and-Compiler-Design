@@ -2,18 +2,19 @@ open! Core
 
 type t = (string * int option * int option) array
 
+(* TODO: refactor this function *)
 let create grammar output_band =
-  let rev_output_band = ref (List.rev output_band) in
+  let output_band = ref output_band in
   let result : (string * int option * int option) array ref = ref [||] in
   let rec interpret_output_band symbol index =
     let _, last_child, _ = Array.get !result index in
     let last_child = ref last_child in
     if Enhanced_grammar.is_non_terminal grammar symbol
     then (
-      match !rev_output_band with
+      match !output_band with
       | [] -> Ok ()
       | production_idx :: rest ->
-        rev_output_band := rest;
+        output_band := rest;
         let production_from, production_to =
           Array.get grammar.productions production_idx
         in
@@ -50,7 +51,7 @@ let create grammar output_band =
     |> List.hd_exn
   in
   result := [| unenhanced_grammar_starting_symbol, None, None |];
-  let%bind.Or_error _ = interpret_output_band unenhanced_grammar_starting_symbol 0 in
+  let%bind.Or_error () = interpret_output_band unenhanced_grammar_starting_symbol 0 in
   Ok !result
 ;;
 

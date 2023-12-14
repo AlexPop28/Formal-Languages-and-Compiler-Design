@@ -1,6 +1,6 @@
 (library
  (name parser)
- (modules parser canonical_collection state lr0_item parser_output import)
+ (modules parser parsing_table state lr0_item parser_output import)
  (libraries core enhanced_grammar)
  (preprocess
   (pps ppx_jane)))

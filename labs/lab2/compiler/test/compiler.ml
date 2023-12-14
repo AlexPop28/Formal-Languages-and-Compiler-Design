@@ -593,20 +593,20 @@ let%expect_test "test goto" =
 
 let%expect_test "test canonical collection basic" =
   let parser = get_parser () in
-  let cannonical_collection =
-    Parser.For_testing.get_cannonical_collection parser |> Or_error.ok_exn
+  let parsing_table = Parser.For_testing.get_parsing_table parser |> Or_error.ok_exn in
+  let canonical_collection_string =
+    Parser.Parsing_table.For_testing.get_canonical_collection_string parsing_table
   in
-  print_string
-    (Parser.Canonical_collection.to_string_hum cannonical_collection);
+  print_string canonical_collection_string;
   [%expect
     {|
-      6[S' -> S.]
-      5[S -> a A.]
-      4[A -> b A.]
-      3[A -> c.]
-      2[A -> .c] ; [A -> b.A] ; [A -> .b A]
-      1[S -> a.A] ; [A -> .c] ; [A -> .b A]
-      0[S' -> .S] ; [S -> .a A] |}]
+      6: [S' -> S.]
+      5: [S -> a A.]
+      4: [A -> b A.]
+      3: [A -> c.]
+      2: [A -> .c] ; [A -> b.A] ; [A -> .b A]
+      1: [S -> a.A] ; [A -> .c] ; [A -> .b A]
+      0: [S' -> .S] ; [S -> .a A] |}]
 ;;
 
 let%expect_test "test validate fails for undeclared symbol root" =
@@ -968,30 +968,19 @@ let%expect_test "test get production is ok" =
     (Ok (((A) (b A)) ((A) (c))))|}]
 ;;
 
-(* TODO
-let%expect_test "test canonical collection our grammar" =
-  let grammar : Grammar.t =
-    { non_terminals = [ "S"; "A" ]
-    ; terminals = [ "a"; "b"; "c" ]
-    ; starting_symbol = "S" (* TODO: validate productions in the create *)
-    ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    }
-  in
-  (*let grammar = get_language_grammar
-    |> Or_error.ok_exn
-    in*)
-  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-  let parser = Parser.create grammar in
-  let cannonical_collection =
-    Parser.For_testing.get_cannonical_collection parser |> Or_error.ok_exn
-  in
-  List.iter cannonical_collection ~f:(fun state ->
-    let action = Parser.State.get_action state grammar in
-    print_s
-      [%sexp (action : (Parser.State.Action.t, Parser.State.Action.t list) Result.t)]);
-  [%expect {||}]
-;;
-*)
+(* TODO Uncomment this to check conflicts in our grammar *)
+(* let%expect_test "test canonical collection our grammar" = *)
+(*   let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in *)
+(*   let parser = Parser.create grammar in *)
+(*   let parsing_table = Parser.For_testing.get_parsing_table parser |> ok_exn in *)
+(*   let canonical_collection = *)
+(*     Parser.Parsing_table.For_testing.get_canonical_collection parsing_table *)
+(*   in *)
+(*   List.iter canonical_collection ~f:(fun (state, _id) -> *)
+(*     let action = Parser.State.get_action state grammar in *)
+(*     print_s [%sexp (action : Parser.State.Action.t Or_error.t)]); *)
+(*   [%expect {||}] *)
+(* ;; *)
 
 (*TODO test it fails on invalid output bands*)
 let%expect_test "test parser output works toy grammar" =
@@ -1005,14 +994,14 @@ let%expect_test "test parser output works toy grammar" =
   (*
      abbbbc
      1 2 2 2 2 3
-     3 2 2 2 2 1
   *)
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
   let parser_output =
-    Parser.Parser_output.create grammar [ 3; 2; 2; 2; 2; 1 ] |> ok_exn
+    Parser.Parser_output.create grammar [ 1; 2; 2; 2; 2; 3 ] |> ok_exn
   in
   print_string (Parser.Parser_output.to_string parser_output);
-  [%expect {|
+  [%expect
+    {|
     |   0. |          S |   1 |   - |
     |   1. |          a |   - |   2 |
     |   2. |          A |   3 |   - |

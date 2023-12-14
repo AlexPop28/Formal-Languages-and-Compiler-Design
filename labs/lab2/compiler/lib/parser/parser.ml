@@ -4,7 +4,7 @@ open! Core
 module State = State
 module Lr0_item = Lr0_item
 module Parser_output = Parser_output
-module Canonical_collection = Canonical_collection
+module Parsing_table = Parsing_table
 
 type t = { grammar : Enhanced_grammar.t }
 
@@ -46,7 +46,7 @@ let goto t state symbol =
   Hash_set.of_list (module Lr0_item) lr0_items |> closure t
 ;;
 
-let get_cannonical_collection_and_parsing_table t =
+let get_parsing_table t =
   let s0 =
     Enhanced_grammar.get_productions_of t.grammar t.grammar.starting_symbol
     |> List.map ~f:(Lr0_item.create_from_production t.grammar.starting_symbol)
@@ -54,33 +54,40 @@ let get_cannonical_collection_and_parsing_table t =
     |> closure t
   in
   let symbols = t.grammar.terminals @ t.grammar.non_terminals in
-  let canonical_collection = Canonical_collection.create () in
+  let parsing_table = Parsing_table.create t.grammar in
   let rec dfs state =
-    let current_id = (Canonical_collection.add_state canonical_collection state) in
-    match current_id with 
+    let%bind.Or_error current_id = Parsing_table.add_state parsing_table state in
+    match current_id with
     | `Duplicate id -> Ok id
-    | `Ok id -> (
+    | `Ok id ->
       let%bind.Or_error _ =
         List.map symbols ~f:(fun symbol ->
           let%bind.Or_error next_state = goto t state symbol in
           if Hash_set.is_empty next_state.items
           then Ok ()
           else (
-            let%bind.Or_error _id = dfs next_state in
-            Ok () (* TODO: set goto (current_state_number, symbol) = id) *)))
+            let%bind.Or_error child_id = dfs next_state in
+            match Parsing_table.add_edge parsing_table id symbol child_id with
+            | `Ok -> Ok ()
+            | `Duplicate ->
+              Or_error.error_s
+                [%message
+                  "goto of state and symbol computed twice"
+                    (State.to_string_hum state)
+                    symbol]))
         |> Or_error.all
       in
       Ok id
-    )
   in
   let%bind.Or_error _root_state_number = dfs s0 in
-  (* TODO: return the parsing table *)
-  Ok (canonical_collection, ())
+  Ok parsing_table
 ;;
 
 module For_testing = struct
+  let get_parsing_table = get_parsing_table
+
   let get_cannonical_collection t =
-    let%bind.Or_error result = get_cannonical_collection_and_parsing_table t in
-    fst result |> Ok
+    let%bind.Or_error result = get_parsing_table t in
+    Parsing_table.For_testing.get_canonical_collection result |> Ok
   ;;
 end
