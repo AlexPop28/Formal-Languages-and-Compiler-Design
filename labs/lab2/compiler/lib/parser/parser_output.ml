@@ -16,7 +16,7 @@ let create grammar output_band =
       | production_idx :: rest ->
         output_band := rest;
         let production_from, production_to =
-          Array.get grammar.productions production_idx
+          Enhanced_grammar.get_production_by_index grammar production_idx
         in
         if not (String.equal production_from symbol)
         then Or_error.error_string "Production doesn't match index"

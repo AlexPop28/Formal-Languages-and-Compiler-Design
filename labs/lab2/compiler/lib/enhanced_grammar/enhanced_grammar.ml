@@ -31,3 +31,21 @@ let get_productions_of t symbol =
     Option.some_if (String.equal lhp symbol) rhp)
   |> List.of_array
 ;;
+
+let get_production_by_index t index = t.productions.(index)
+
+let get_index_of_production t (lhp1, rhp1) =
+  let res =
+    Array.findi t.productions ~f:(fun _ (lhp2, rhp2) ->
+      String.(lhp1 = lhp2) && List.equal String.( = ) rhp1 rhp2)
+  in
+  match res with
+  | None ->
+    Or_error.error_s
+      [%message
+        "Invalid production"
+          (t.productions : (string * string list) array)
+          lhp1
+          (rhp1 : string list)]
+  | Some (i, _) -> Ok i
+;;

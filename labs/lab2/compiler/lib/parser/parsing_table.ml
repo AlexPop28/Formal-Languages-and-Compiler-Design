@@ -7,6 +7,7 @@ type t =
   ; mutable next_state_id : int
   ; goto : (int * string, int) Hashtbl.t
   ; action : (int, State.Action.t) Hashtbl.t
+  ; mutable root : int
   }
 
 let create grammar =
@@ -19,6 +20,7 @@ let create grammar =
           type t = int * string [@@deriving hash, sexp, equal, compare]
         end)
   ; action = Hashtbl.create (module Int)
+  ; root = -1
   }
 ;;
 
@@ -40,7 +42,11 @@ let add_edge t state0 symbol state1 =
   Hashtbl.add t.goto ~key:(state0, symbol) ~data:state1
 ;;
 
-let goto t state symbol = Hashtbl.find t.goto (state, symbol)
+let goto t state symbol =
+  match Hashtbl.find t.goto (state, symbol) with
+  | Some s -> Ok s
+  | None -> Or_error.error_s [%message "Goto to empty state" (state : int) symbol]
+;;
 
 let get_canonical_collection_string t =
   String.concat_lines
@@ -64,6 +70,9 @@ let get_action t state_id =
   | None -> Or_error.error_s [%message "Invalid state number" (state_id : int)]
   | Some action -> Ok action
 ;;
+
+let get_root t = t.root
+let set_root t root = t.root <- root
 
 module For_testing = struct
   let get_canonical_collection_string = get_canonical_collection_string

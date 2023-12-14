@@ -79,11 +79,57 @@ let get_parsing_table t =
       in
       Ok id
   in
-  let%bind.Or_error _root_state_number = dfs s0 in
+  let%bind.Or_error root_state_number = dfs s0 in
+  Parsing_table.set_root parsing_table root_state_number;
   Ok parsing_table
 ;;
 
+let rec parse_ t parsing_table work input output =
+  match work with
+  | [] -> failwith "something went wrong"
+  | (_, state) :: _ ->
+    let%bind.Or_error action = Parsing_table.get_action parsing_table state in
+    (match action, input with
+     | Accept, [] -> Ok output
+     | Accept, _ ->
+       Or_error.error_s
+         [%message "Reached accept state but input is not empty" (input : string list)]
+     | Shift, hd :: new_input ->
+       let%bind.Or_error new_state = Parsing_table.goto parsing_table state hd in
+       parse_ t parsing_table ((hd, new_state) :: work) new_input output
+     | Shift, [] -> Or_error.error_s [%message "Shifting with empty input" (state : int)]
+     | Reduce (lhp, rhp), input ->
+       let%bind.Or_error production =
+         Enhanced_grammar.get_index_of_production t.grammar (lhp, rhp)
+       in
+       let prod, rem_work = List.split_n work (List.length rhp) in
+       if List.exists2_exn (List.rev prod) rhp ~f:(fun (a, _) b -> String.(a = b))
+       then
+         Or_error.error_s
+           [%message
+             "Trying to reduce but the working stack does not contain the right hand \
+              side of the production"
+               (rhp : string list)
+               (work : (string * int) list)]
+       else (
+         let%bind.Or_error new_state =
+           Parsing_table.goto parsing_table (snd (List.hd_exn rem_work)) lhp
+         in
+         parse_ t parsing_table ((lhp, new_state) :: rem_work) input (production :: output)))
+;;
+
+let parse t input =
+  let%bind.Or_error parsing_table = get_parsing_table t in
+  let%bind.Or_error parsing_table = Parsing_table.build_actions parsing_table in
+  let%bind.Or_error output_band =
+    parse_ t parsing_table [ "", Parsing_table.get_root parsing_table ] input []
+  in
+  Parser_output.create t.grammar output_band
+;;
+
 module For_testing = struct
+  let closure = closure
+  let goto = goto
   let get_parsing_table = get_parsing_table
 
   let get_cannonical_collection t =

@@ -548,7 +548,7 @@ let%expect_test "TODO [Grammar.create]" = ()
 let%expect_test "test closure on empty set" =
   let parser = get_parser () in
   let items = Hash_set.of_list (module Parser.Lr0_item) [] in
-  let closure = Parser.closure parser items in
+  let closure = Parser.For_testing.closure parser items in
   print_string (Parser.State.to_string_hum closure);
   [%expect {| |}]
 ;;
@@ -560,7 +560,7 @@ let%expect_test "test closure basic" =
       (module Parser.Lr0_item)
       [ { lhp = "S"; left_dot = [ "a" ]; right_dot = [ "A" ] } ]
   in
-  let closure = Parser.closure parser items in
+  let closure = Parser.For_testing.closure parser items in
   print_string (Parser.State.to_string_hum closure);
   [%expect "[S -> a.A] ; [A -> .c] ; [A -> .b A] "]
 ;;
@@ -573,7 +573,7 @@ let%expect_test "test goto to empty state" =
       [ { lhp = "S"; left_dot = [ "a" ]; right_dot = [ "A" ] } ]
   in
   let state : Parser.State.t = { items } in
-  let result = Parser.goto parser state "B" |> Or_error.ok_exn in
+  let result = Parser.For_testing.goto parser state "B" |> Or_error.ok_exn in
   print_string (Parser.State.to_string_hum result);
   [%expect ""]
 ;;
@@ -586,14 +586,14 @@ let%expect_test "test goto" =
       [ { lhp = "S"; left_dot = []; right_dot = [ "a"; "A" ] } ]
   in
   let state : Parser.State.t = { items } in
-  let result = Parser.goto parser state "a" |> Or_error.ok_exn in
+  let result = Parser.For_testing.goto parser state "a" |> Or_error.ok_exn in
   print_string (Parser.State.to_string_hum result);
   [%expect "[S -> a.A] ; [A -> .c] ; [A -> .b A]"]
 ;;
 
 let%expect_test "test canonical collection basic" =
   let parser = get_parser () in
-  let parsing_table = Parser.For_testing.get_parsing_table parser |> Or_error.ok_exn in
+  let parsing_table = Parser.get_parsing_table parser |> Or_error.ok_exn in
   let canonical_collection_string =
     Parser.Parsing_table.For_testing.get_canonical_collection_string parsing_table
   in
