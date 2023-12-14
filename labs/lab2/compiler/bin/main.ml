@@ -199,6 +199,56 @@ module Grammar_command = struct
   ;;
 end
 
+module Parser_command = struct
+  let grammar_param =
+    Command.Param.flag
+      "grammar"
+      (Command.Param.required Filename_unix.arg_type)
+      ~doc:"FILE Input grammar file"
+
+  let program_param =
+    Command.Param.flag
+      "program"
+      (Command.Param.required Filename_unix.arg_type)
+      ~doc:"FILE Input program file"
+
+  let output_param =
+    Command.Param.flag
+      "output"
+      (Command.Param.optional Filename_unix.arg_type)
+      ~doc:"FILE Output file (default: stdout)"
+
+  let parse_command =
+    Command.basic_or_error
+      ~summary:"Parse a program using a grammar"
+      (let open Command.Let_syntax in
+       let%map_open grammar_file = grammar_param
+       and program_file = program_param
+       and output_file = output_param in
+       fun () ->
+         let%bind.Or_error grammar = Grammar.create_from_file grammar_file in
+         let%bind.Or_error grammar = Enhanced_grammar.create grammar in
+         let program = In_channel.read_lines program_file in
+         let parser = Parser.create grammar in
+         let%bind.Or_error parse_result = Parser.parse parser program in
+         let output_channel =
+           match output_file with
+           | Some file -> Out_channel.create file
+           | None -> Out_channel.stdout
+         in
+         Out_channel.output_string output_channel (Parser.Parser_output.to_string parse_result);
+         if Option.is_some output_file then Out_channel.close output_channel;
+         Ok ())
+  ;;
+
+  let command =
+    Command.group
+      ~summary:"Commands for parsing"
+      ["parse", parse_command]
+  ;;
+end
+
+
 let () =
   Command_unix.run
     (Command.group
@@ -206,5 +256,6 @@ let () =
        [ "scan", Scanner_command.command
        ; "finite-automaton", Finite_automaton_command.command
        ; "grammar", Grammar_command.command
+       ; "parser", Parser_command.command
        ])
 ;;
