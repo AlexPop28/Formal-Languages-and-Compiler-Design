@@ -103,7 +103,7 @@ let rec parse_ t parsing_table work input output =
          Enhanced_grammar.get_index_of_production t.grammar (lhp, rhp)
        in
        let prod, rem_work = List.split_n work (List.length rhp) in
-       if not (List.exists2_exn (List.rev prod) rhp ~f:(fun (a, _) b -> String.(a = b)))
+       if List.exists2_exn (List.rev prod) rhp ~f:(fun (a, _) b -> not String.(a = b))
        then
          Or_error.error_s
            [%message
