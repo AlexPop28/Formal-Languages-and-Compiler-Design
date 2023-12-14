@@ -53,6 +53,7 @@ let get_canonical_collection_string t =
     (List.map t.states ~f:(fun (s, id) -> Int.to_string id ^ ": " ^ State.to_string_hum s))
 ;;
 
+(* TODO make this print the whole parsing table *)
 let to_string_hum t = get_canonical_collection_string t
 
 let build_actions t =
