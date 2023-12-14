@@ -972,7 +972,7 @@ let%expect_test "test get production is ok" =
 (* let%expect_test "test canonical collection our grammar" = *)
 (*   let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in *)
 (*   let parser = Parser.create grammar in *)
-(*   let parsing_table = Parser.For_testing.get_parsing_table parser |> ok_exn in *)
+(*   let parsing_table = Parser.get_parsing_table parser |> ok_exn in *)
 (*   let canonical_collection = *)
 (*     Parser.Parsing_table.For_testing.get_canonical_collection parsing_table *)
 (*   in *)
