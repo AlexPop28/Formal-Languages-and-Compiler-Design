@@ -532,12 +532,12 @@ let get_parser () =
   (* TODO: refactor tests to provide a sexp representation for the grammars and
      write a wrapper [with_grammar] that takes it and the test itself as a
      callback *)
-  let grammar : Grammar.t =
+  let grammar =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
-    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; starting_symbol = "S"
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    }
+    } |> Grammar.validate |> Or_error.ok_exn
   in
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
   Parser.create grammar
