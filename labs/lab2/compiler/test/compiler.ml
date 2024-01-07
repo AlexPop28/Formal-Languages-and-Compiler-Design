@@ -601,8 +601,8 @@ let%expect_test "test goto fails if symbol not part of grammar" =
       [ { lhp = "S"; left_dot = [ "a" ]; right_dot = [ "A" ] } ]
   in
   let state : Parser.State.t = { items } in
-  let result = Parser.For_testing.goto parser state "B" in 
-  print_s [%sexp (result: Parser.State.t Or_error.t)];
+  let result = Parser.For_testing.goto parser state "B" in
+  print_s [%sexp (result : Parser.State.t Or_error.t)];
   [%expect "(Error \"B is not part of grammar\")"]
 ;;
 

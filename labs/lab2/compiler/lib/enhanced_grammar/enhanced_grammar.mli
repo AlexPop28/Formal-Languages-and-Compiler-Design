@@ -14,4 +14,4 @@ val is_non_terminal : t -> string -> bool
 val get_productions_of : t -> string -> string list list
 val get_production_by_index : t -> int -> string * string list
 val get_index_of_production : t -> string * string list -> int Or_error.t
-val is_symbol_part_of_grammar: t -> string -> bool 
+val is_symbol_part_of_grammar : t -> string -> bool
