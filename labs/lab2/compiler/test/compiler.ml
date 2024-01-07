@@ -614,7 +614,7 @@ let%expect_test "test validate fails for undeclared symbol root" =
     Grammar.create
       ~non_terminals:[ "S"; "A" ]
       ~terminals:[ "a"; "b"; "c" ]
-      ~starting_symbol:"S2" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S2"
       ~productions:[ [ "S" ], [ "a"; "A"; "S" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
   in
   print_s [%sexp (grammar : Grammar.t Or_error.t)];
@@ -626,7 +626,7 @@ let%expect_test "test validate fails for undeclared symbol on lhs" =
     Grammar.create
       ~non_terminals:[ "S"; "A" ]
       ~terminals:[ "b"; "c" ]
-      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S"
       ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A2" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
   in
   print_s [%sexp (grammar : Grammar.t Or_error.t)];
@@ -642,7 +642,7 @@ let%expect_test "test validate fails for undeclared symbol on rhs" =
     Grammar.create
       ~non_terminals:[ "S"; "A" ]
       ~terminals:[ "b"; "c" ]
-      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S"
       ~productions:[ [ "S" ], [ "a2"; "1A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
   in
   print_s [%sexp (grammar : Grammar.t Or_error.t)];
@@ -656,7 +656,7 @@ let%expect_test "test validate fails if production doesnt have nonterminal on lh
     Grammar.create
       ~non_terminals:[ "S"; "A" ]
       ~terminals:[ "a"; "b"; "c" ]
-      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S"
       ~productions:
         [ [ "S" ], [ "a"; "A" ]
         ; [ "A" ], [ "b"; "A" ]
@@ -675,7 +675,7 @@ let%expect_test "test validate fails if nonterminal doesn't have expansion" =
     Grammar.create
       ~non_terminals:[ "S"; "A"; "B" ]
       ~terminals:[ "a"; "b"; "c" ]
-      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S"
       ~productions:[ [ "S" ], [ "a"; "A"; "B" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
   in
   print_s [%sexp (grammar : Grammar.t Or_error.t)];
@@ -688,7 +688,7 @@ let%expect_test "test validate fails if symbol cannot be obtained" =
     Grammar.create
       ~non_terminals:[ "S"; "A"; "B" ]
       ~terminals:[ "a"; "b"; "c"; "d" ]
-      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S"
       ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
   in
   print_s [%sexp (grammar : Grammar.t Or_error.t)];
@@ -943,7 +943,7 @@ let%expect_test "test get production fails if lhs contains undeclared symbols" =
     Grammar.create
       ~non_terminals:[ "S"; "A" ]
       ~terminals:[ "a"; "b"; "c" ]
-      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S"
       ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
     |> Or_error.ok_exn
   in
@@ -958,7 +958,7 @@ let%expect_test "test get production is ok" =
     Grammar.create
       ~non_terminals:[ "S"; "A" ]
       ~terminals:[ "a"; "b"; "c" ]
-      ~starting_symbol:"S" (* TODO: validate productions in the create *)
+      ~starting_symbol:"S"
       ~productions:[ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
     |> Or_error.ok_exn
   in
@@ -988,7 +988,7 @@ let%expect_test "test parser output works toy grammar" =
   let grammar =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
-    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; starting_symbol = "S"
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
     } |> Grammar.validate
   in
