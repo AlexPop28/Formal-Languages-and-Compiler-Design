@@ -969,18 +969,18 @@ let%expect_test "test get production is ok" =
 ;;
 
 (* TODO Uncomment this to check conflicts in our grammar *)
-(* let%expect_test "test canonical collection our grammar" = *)
-(*   let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in *)
-(*   let parser = Parser.create grammar in *)
-(*   let parsing_table = Parser.get_parsing_table parser |> ok_exn in *)
-(*   let canonical_collection = *)
-(*     Parser.Parsing_table.For_testing.get_canonical_collection parsing_table *)
-(*   in *)
-(*   List.iter canonical_collection ~f:(fun (state, _id) -> *)
-(*     let action = Parser.State.get_action state grammar in *)
-(*     print_s [%sexp (action : Parser.State.Action.t Or_error.t)]); *)
-(*   [%expect {||}] *)
-(* ;; *)
+let%expect_test "test canonical collection our grammar" =
+  let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in
+  let parser = Parser.create grammar in
+  let parsing_table = Parser.get_parsing_table parser |> ok_exn in
+  let canonical_collection =
+    Parser.Parsing_table.For_testing.get_canonical_collection parsing_table
+  in
+  List.iter canonical_collection ~f:(fun (state, _id) ->
+    let action = Parser.State.get_action state grammar in
+    print_s [%sexp (action : Parser.State.Action.t Or_error.t)]);
+  [%expect {||}]
+;;
 
 (*TODO test it fails on invalid output bands*)
 let%expect_test "test parser output works toy grammar" =

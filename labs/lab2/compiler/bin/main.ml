@@ -205,18 +205,21 @@ module Parser_command = struct
       "grammar"
       (Command.Param.required Filename_unix.arg_type)
       ~doc:"FILE Input grammar file"
+  ;;
 
   let program_param =
     Command.Param.flag
       "program"
       (Command.Param.required Filename_unix.arg_type)
       ~doc:"FILE Input program file"
+  ;;
 
   let output_param =
     Command.Param.flag
       "output"
       (Command.Param.optional Filename_unix.arg_type)
       ~doc:"FILE Output file (default: stdout)"
+  ;;
 
   let parse_command =
     Command.basic_or_error
@@ -236,18 +239,15 @@ module Parser_command = struct
            | Some file -> Out_channel.create file
            | None -> Out_channel.stdout
          in
-         Out_channel.output_string output_channel (Parser.Parser_output.to_string parse_result);
+         Out_channel.output_string
+           output_channel
+           (Parser.Parser_output.to_string parse_result);
          if Option.is_some output_file then Out_channel.close output_channel;
          Ok ())
   ;;
 
-  let command =
-    Command.group
-      ~summary:"Commands for parsing"
-      ["parse", parse_command]
-  ;;
+  let command = Command.group ~summary:"Commands for parsing" [ "parse", parse_command ]
 end
-
 
 let () =
   Command_unix.run
