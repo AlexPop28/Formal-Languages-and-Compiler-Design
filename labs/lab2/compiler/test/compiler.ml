@@ -2138,11 +2138,11 @@ let%expect_test "test p1.c works" =
       int ans;
       ans = a;
       if (b > ans) {
-        ans = b
-      }
+        ans = b;
+      };
       if (c > ans) {
         ans = c;
-      }
+      };
       print_int(ans);
     }
   |}
@@ -2151,18 +2151,155 @@ let%expect_test "test p1.c works" =
   let tokens = List.map ~f:fst (Pif.to_list pif) in
   let parser_output = Parser.parse parser tokens |> ok_exn in
   print_string (Parser.Parser_output.to_string parser_output);
-  [%expect.unreachable]
-[@@expect.uncaught_exn
-  {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  ("Goto to empty state" (state 92) })
-  Raised at Base__Error.raise in file "src/error.ml" (inlined), line 9, characters 14-30
-  Called from Base__Or_error.ok_exn in file "src/or_error.ml", line 107, characters 17-32
-  Called from Test__Compiler.(fun) in file "test/compiler.ml", line 2156, characters 22-58
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 234, characters 12-19 |}]
+  [%expect "
+    |   0. |      start |   1 |   - |
+    |   1. |          { |   - |   2 |
+    |   2. |    program |   4 |   3 |
+    |   3. |          } |   - |   - |
+    |   4. |    program |  15 |   5 |
+    |   5. |  statement |   6 |   - |
+    |   6. | expression |   8 |   7 |
+    |   7. |          ; |   - |   - |
+    |   8. | print_call |   9 |   - |
+    |   9. |  print_int |   - |  10 |
+    |  10. |          ( |   - |  11 |
+    |  11. | expression |  13 |  12 |
+    |  12. |          ) |   - |   - |
+    |  13. |       term |  14 |   - |
+    |  14. |         id |   - |   - |
+    |  15. |    program |  43 |  16 |
+    |  16. |  statement |  17 |   - |
+    |  17. | if_expression |  18 |   - |
+    |  18. |         if |   - |  19 |
+    |  19. |          ( |   - |  20 |
+    |  20. | expression |  41 |  21 |
+    |  21. | bool_operator |  40 |  22 |
+    |  22. | expression |  38 |  23 |
+    |  23. |          ) |   - |  24 |
+    |  24. |          { |   - |  25 |
+    |  25. |    program |  28 |  26 |
+    |  26. |          } |   - |  27 |
+    |  27. |          ; |   - |   - |
+    |  28. |  statement |  29 |   - |
+    |  29. | assignment |  30 |   - |
+    |  30. | expression |  36 |  31 |
+    |  31. |          = |   - |  32 |
+    |  32. | expression |  34 |  33 |
+    |  33. |          ; |   - |   - |
+    |  34. |       term |  35 |   - |
+    |  35. |         id |   - |   - |
+    |  36. |       term |  37 |   - |
+    |  37. |         id |   - |   - |
+    |  38. |       term |  39 |   - |
+    |  39. |         id |   - |   - |
+    |  40. |          > |   - |   - |
+    |  41. |       term |  42 |   - |
+    |  42. |         id |   - |   - |
+    |  43. |    program |  71 |  44 |
+    |  44. |  statement |  45 |   - |
+    |  45. | if_expression |  46 |   - |
+    |  46. |         if |   - |  47 |
+    |  47. |          ( |   - |  48 |
+    |  48. | expression |  69 |  49 |
+    |  49. | bool_operator |  68 |  50 |
+    |  50. | expression |  66 |  51 |
+    |  51. |          ) |   - |  52 |
+    |  52. |          { |   - |  53 |
+    |  53. |    program |  56 |  54 |
+    |  54. |          } |   - |  55 |
+    |  55. |          ; |   - |   - |
+    |  56. |  statement |  57 |   - |
+    |  57. | assignment |  58 |   - |
+    |  58. | expression |  64 |  59 |
+    |  59. |          = |   - |  60 |
+    |  60. | expression |  62 |  61 |
+    |  61. |          ; |   - |   - |
+    |  62. |       term |  63 |   - |
+    |  63. |         id |   - |   - |
+    |  64. |       term |  65 |   - |
+    |  65. |         id |   - |   - |
+    |  66. |       term |  67 |   - |
+    |  67. |         id |   - |   - |
+    |  68. |          > |   - |   - |
+    |  69. |       term |  70 |   - |
+    |  70. |         id |   - |   - |
+    |  71. |    program |  82 |  72 |
+    |  72. |  statement |  73 |   - |
+    |  73. | assignment |  74 |   - |
+    |  74. | expression |  80 |  75 |
+    |  75. |          = |   - |  76 |
+    |  76. | expression |  78 |  77 |
+    |  77. |          ; |   - |   - |
+    |  78. |       term |  79 |   - |
+    |  79. |         id |   - |   - |
+    |  80. |       term |  81 |   - |
+    |  81. |         id |   - |   - |
+    |  82. |    program |  89 |  83 |
+    |  83. |  statement |  84 |   - |
+    |  84. | variable_declaration |  86 |  85 |
+    |  85. |          ; |   - |   - |
+    |  86. |       type |  88 |  87 |
+    |  87. |         id |   - |   - |
+    |  88. |        int |   - |   - |
+    |  89. |    program | 102 |  90 |
+    |  90. |  statement |  91 |   - |
+    |  91. | assignment |  92 |   - |
+    |  92. | expression | 100 |  93 |
+    |  93. |          = |   - |  94 |
+    |  94. | expression |  96 |  95 |
+    |  95. |          ; |   - |   - |
+    |  96. |  read_call |  97 |   - |
+    |  97. |   read_int |   - |  98 |
+    |  98. |          ( |   - |  99 |
+    |  99. |          ) |   - |   - |
+    | 100. |       term | 101 |   - |
+    | 101. |         id |   - |   - |
+    | 102. |    program | 115 | 103 |
+    | 103. |  statement | 104 |   - |
+    | 104. | assignment | 105 |   - |
+    | 105. | expression | 113 | 106 |
+    | 106. |          = |   - | 107 |
+    | 107. | expression | 109 | 108 |
+    | 108. |          ; |   - |   - |
+    | 109. |  read_call | 110 |   - |
+    | 110. |   read_int |   - | 111 |
+    | 111. |          ( |   - | 112 |
+    | 112. |          ) |   - |   - |
+    | 113. |       term | 114 |   - |
+    | 114. |         id |   - |   - |
+    | 115. |    program | 128 | 116 |
+    | 116. |  statement | 117 |   - |
+    | 117. | assignment | 118 |   - |
+    | 118. | expression | 126 | 119 |
+    | 119. |          = |   - | 120 |
+    | 120. | expression | 122 | 121 |
+    | 121. |          ; |   - |   - |
+    | 122. |  read_call | 123 |   - |
+    | 123. |   read_int |   - | 124 |
+    | 124. |          ( |   - | 125 |
+    | 125. |          ) |   - |   - |
+    | 126. |       term | 127 |   - |
+    | 127. |         id |   - |   - |
+    | 128. |    program | 135 | 129 |
+    | 129. |  statement | 130 |   - |
+    | 130. | variable_declaration | 132 | 131 |
+    | 131. |          ; |   - |   - |
+    | 132. |       type | 134 | 133 |
+    | 133. |         id |   - |   - |
+    | 134. |        int |   - |   - |
+    | 135. |    program | 142 | 136 |
+    | 136. |  statement | 137 |   - |
+    | 137. | variable_declaration | 139 | 138 |
+    | 138. |          ; |   - |   - |
+    | 139. |       type | 141 | 140 |
+    | 140. |         id |   - |   - |
+    | 141. |        int |   - |   - |
+    | 142. |  statement | 143 |   - |
+    | 143. | variable_declaration | 145 | 144 |
+    | 144. |          ; |   - |   - |
+    | 145. |       type | 147 | 146 |
+    | 146. |         id |   - |   - |
+    | 147. |        int |   - |   - |"]
 ;;
 
 let%expect_test "test p2.c works" =

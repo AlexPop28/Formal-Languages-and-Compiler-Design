@@ -207,11 +207,11 @@ module Parser_command = struct
       ~doc:"FILE Input grammar file"
   ;;
 
-  let program_param =
+  let pif_param =
     Command.Param.flag
-      "program"
+      "pif"
       (Command.Param.required Filename_unix.arg_type)
-      ~doc:"FILE Input program file"
+      ~doc:"FILE Input pif file"
   ;;
 
   let output_param =
@@ -223,16 +223,17 @@ module Parser_command = struct
 
   let parse_command =
     Command.basic_or_error
-      ~summary:"Parse a program using a grammar"
+      ~summary:"Parse a program using grammar and pif"
       (let open Command.Let_syntax in
        let%map_open grammar_file = grammar_param
-       and program_file = program_param
+       and pif_file = pif_param
        and output_file = output_param in
        fun () ->
          let%bind.Or_error grammar = Grammar.create_from_file grammar_file in
          let%bind.Or_error grammar = Enhanced_grammar.create grammar in
-         let program = In_channel.read_lines program_file in
+         let pif = In_channel.read_all pif_file |> Pif.from_hum |> Or_error.ok_exn in
          let parser = Parser.create grammar in
+         let program = List.map ~f:fst (Pif.to_list pif) in
          let%bind.Or_error parse_result = Parser.parse parser program in
          let output_channel =
            match output_file with
