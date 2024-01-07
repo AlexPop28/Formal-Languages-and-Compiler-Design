@@ -722,12 +722,10 @@ let get_language_grammar =
       (
         (non_terminals
           (
-            item
-
+            start
             program
             statement
             variable_declaration
-            function_call
             assignment
             if_expression
             while_expression
@@ -746,16 +744,14 @@ let get_language_grammar =
         (terminals
           ("+" "-" "*" "/" "%" "==" "<" "<=" ">" ">=" "=" "!=" "{" "}" "(" ")" ";" "," int str double get set read_int read_str read_double print_int print_str print_double if else while id const)
         )
-        (starting_symbol program)
+        (starting_symbol start)
         (productions
           (
-            ((item) (id))
-            ((item) (const))
-
+            ((start) ("{" program "}"))
             ((program) (statement))
             ((program) (program statement))
             ((statement) (variable_declaration ";"))
-            ((statement) (function_call ";"))
+            ((statement) (expression ";"))
             ((statement) (assignment))
             ((statement) (if_expression))
             ((statement) (while_expression))
@@ -765,15 +761,14 @@ let get_language_grammar =
             ((type) (double))
 
             ((variable_declaration) (type id))
+  
+            ((expression) (get_call))
+            ((expression) (set_call))
+            ((expression) (read_call))
+            ((expression) (print_call))
 
-            ((function_call) (get_call))
-            ((function_call) (set_call))
-            ((function_call) (read_call))
-            ((function_call) (print_call))
-
-            ((get_call) (get "(" id "," expression ")"))
-
-            ((set_call) (set "(" id "," expression "," expression ")"))
+            ((get_call) (get "(" expression "," expression ")"))
+            ((set_call) (set "(" expression "," expression "," expression ")"))
 
             ((read_call) (read_int "(" ")"))
             ((read_call) (read_str "(" ")"))
@@ -783,7 +778,7 @@ let get_language_grammar =
             ((print_call) (print_str "(" expression ")"))
             ((print_call) (print_double "(" expression ")"))
 
-            ((assignment) (id "=" expression ";"))
+            ((assignment) (expression "=" expression ";"))
 
             ((if_expression) (if "(" expression bool_operator expression ")" "{" program "}" ";"))
             ((if_expression) (if "(" expression bool_operator expression ")" "{" program "}" else "{" program "}" ";"))
@@ -804,7 +799,8 @@ let get_language_grammar =
             ((expression) (expression "/" term))
             ((expression) (expression "%" term))
 
-            ((term) (item))
+            ((term) (id))
+            ((term) (const))
             ((term) ("(" expression ")"))
           )
         )
@@ -861,142 +857,122 @@ let%expect_test "test canonical collection our grammar" =
     Parser.Parsing_table.For_testing.get_canonical_collection parsing_table
   in
   (*
-  List.iter canonical_collection ~f:(fun (state, _id) ->
-    let action = Parser.State.get_action state grammar in
-    print_s [%sexp (action : Parser.State.Action.t Or_error.t)]);
+     List.iter canonical_collection ~f:(fun (state, _id) ->
+     let action = Parser.State.get_action state grammar in
+     print_s [%sexp (action : Parser.State.Action.t Or_error.t)]);
   *)
-  print_s [%sexp (canonical_collection: (Parser.State.t * int) list)];
-  [%expect {|
-    (((((lhp type) (left_dot ()) (right_dot (int)))
+  print_s [%sexp (canonical_collection : (Parser.State.t * int) list)];
+  [%expect
+    {|
+    (((((lhp S') (left_dot (start)) (right_dot ()))) 106)
+     ((((lhp start) (left_dot (} program {)) (right_dot ()))) 105)
+     ((((lhp type) (left_dot ()) (right_dot (int)))
+       ((lhp if_expression) (left_dot ())
+        (right_dot
+         (if "(" expression bool_operator expression ")" { program } else {
+          program } ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
        ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
        ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
        ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
        ((lhp print_call) (left_dot ())
         (right_dot (print_double "(" expression ")")))
-       ((lhp S') (left_dot (program)) (right_dot ()))
-       ((lhp if_expression) (left_dot ())
-        (right_dot
-         (if "(" expression bool_operator expression ")" { program } else {
-          program } ";")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
        ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
-       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
        ((lhp program) (left_dot (program)) (right_dot (statement)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
        ((lhp while_expression) (left_dot ())
         (right_dot
          (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
        ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
-       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
        ((lhp statement) (left_dot ()) (right_dot (assignment)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
        ((lhp type) (left_dot ()) (right_dot (double)))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
-       ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp start) (left_dot (program {)) (right_dot (})))
        ((lhp statement) (left_dot ()) (right_dot (if_expression)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_str "(" expression ")")))
        ((lhp if_expression) (left_dot ())
         (right_dot
          (if "(" expression bool_operator expression ")" { program } ";"))))
-      105)
+      104)
      ((((lhp if_expression)
         (left_dot
          (";" } program { else } program { ")" expression bool_operator
           expression "(" if))
         (right_dot ())))
-      104)
+      103)
      ((((lhp if_expression)
         (left_dot
          (} program { else } program { ")" expression bool_operator expression
           "(" if))
         (right_dot (";"))))
-      103)
+      102)
      ((((lhp type) (left_dot ()) (right_dot (int)))
-       ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
-       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
-       ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
-       ((lhp print_call) (left_dot ())
-        (right_dot (print_double "(" expression ")")))
        ((lhp if_expression) (left_dot ())
         (right_dot
          (if "(" expression bool_operator expression ")" { program } else {
           program } ";")))
-       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
        ((lhp type) (left_dot ()) (right_dot (str)))
-       ((lhp program) (left_dot (program)) (right_dot (statement)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
-       ((lhp while_expression) (left_dot ())
-        (right_dot
-         (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
-       ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
        ((lhp statement) (left_dot ()) (right_dot (while_expression)))
-       ((lhp statement) (left_dot ()) (right_dot (assignment)))
-       ((lhp print_call) (left_dot ())
-        (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
-       ((lhp type) (left_dot ()) (right_dot (double)))
        ((lhp if_expression)
         (left_dot
          (program { else } program { ")" expression bool_operator expression "("
           if))
         (right_dot (} ";")))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
        ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
-       ((lhp statement) (left_dot ()) (right_dot (if_expression)))
-       ((lhp print_call) (left_dot ())
-        (right_dot (print_str "(" expression ")")))
-       ((lhp if_expression) (left_dot ())
-        (right_dot
-         (if "(" expression bool_operator expression ")" { program } ";"))))
-      102)
-     ((((lhp type) (left_dot ()) (right_dot (int)))
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
        ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
        ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
        ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
-       ((lhp program) (left_dot ()) (right_dot (program statement)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_double "(" expression ")")))
-       ((lhp if_expression) (left_dot ())
-        (right_dot
-         (if "(" expression bool_operator expression ")" { program } else {
-          program } ";")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
        ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
-       ((lhp type) (left_dot ()) (right_dot (str)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp program) (left_dot (program)) (right_dot (statement)))
        ((lhp while_expression) (left_dot ())
         (right_dot
          (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
        ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
-       ((lhp program) (left_dot ()) (right_dot (statement)))
-       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
        ((lhp statement) (left_dot ()) (right_dot (assignment)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
        ((lhp type) (left_dot ()) (right_dot (double)))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
-       ((lhp if_expression)
-        (left_dot
-         ({ else } program { ")" expression bool_operator expression "(" if))
-        (right_dot (program } ";")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
-       ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
        ((lhp statement) (left_dot ()) (right_dot (if_expression)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_str "(" expression ")")))
@@ -1004,24 +980,97 @@ let%expect_test "test canonical collection our grammar" =
         (right_dot
          (if "(" expression bool_operator expression ")" { program } ";"))))
       101)
+     ((((lhp type) (left_dot ()) (right_dot (int)))
+       ((lhp program) (left_dot ()) (right_dot (program statement)))
+       ((lhp if_expression) (left_dot ())
+        (right_dot
+         (if "(" expression bool_operator expression ")" { program } else {
+          program } ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
+       ((lhp program) (left_dot ()) (right_dot (statement)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp if_expression)
+        (left_dot
+         ({ else } program { ")" expression bool_operator expression "(" if))
+        (right_dot (program } ";")))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp while_expression) (left_dot ())
+        (right_dot
+         (while "(" expression bool_operator expression ")" { program })))
+       ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp statement) (left_dot ()) (right_dot (assignment)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp type) (left_dot ()) (right_dot (double)))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp statement) (left_dot ()) (right_dot (if_expression)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp if_expression) (left_dot ())
+        (right_dot
+         (if "(" expression bool_operator expression ")" { program } ";"))))
+      100)
      ((((lhp if_expression)
         (left_dot
          (else } program { ")" expression bool_operator expression "(" if))
         (right_dot ({ program } ";"))))
-      100)
+      99)
      ((((lhp if_expression)
         (left_dot
          (";" } program { ")" expression bool_operator expression "(" if))
         (right_dot ())))
-      99)
+      98)
      ((((lhp if_expression)
         (left_dot (} program { ")" expression bool_operator expression "(" if))
         (right_dot (";")))
        ((lhp if_expression)
         (left_dot (} program { ")" expression bool_operator expression "(" if))
         (right_dot (else { program } ";"))))
-      98)
+      97)
      ((((lhp type) (left_dot ()) (right_dot (int)))
+       ((lhp if_expression) (left_dot ())
+        (right_dot
+         (if "(" expression bool_operator expression ")" { program } else {
+          program } ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp if_expression)
+        (left_dot (program { ")" expression bool_operator expression "(" if))
+        (right_dot (} ";")))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
        ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
        ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
        ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
@@ -1030,53 +1079,83 @@ let%expect_test "test canonical collection our grammar" =
        ((lhp if_expression)
         (left_dot (program { ")" expression bool_operator expression "(" if))
         (right_dot (} else { program } ";")))
-       ((lhp if_expression) (left_dot ())
-        (right_dot
-         (if "(" expression bool_operator expression ")" { program } else {
-          program } ";")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
        ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
-       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
        ((lhp program) (left_dot (program)) (right_dot (statement)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
        ((lhp while_expression) (left_dot ())
         (right_dot
          (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
        ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
-       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
        ((lhp statement) (left_dot ()) (right_dot (assignment)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
        ((lhp type) (left_dot ()) (right_dot (double)))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
-       ((lhp if_expression)
-        (left_dot (program { ")" expression bool_operator expression "(" if))
-        (right_dot (} ";")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
-       ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
        ((lhp statement) (left_dot ()) (right_dot (if_expression)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_str "(" expression ")")))
        ((lhp if_expression) (left_dot ())
         (right_dot
          (if "(" expression bool_operator expression ")" { program } ";"))))
-      97)
-     ((((lhp program) (left_dot (statement)) (right_dot ()))) 96)
-     ((((lhp function_call) (left_dot (print_call)) (right_dot ()))) 95)
-     ((((lhp function_call) (left_dot (read_call)) (right_dot ()))) 94)
-     ((((lhp function_call) (left_dot (set_call)) (right_dot ()))) 93)
-     ((((lhp function_call) (left_dot (get_call)) (right_dot ()))) 92)
-     ((((lhp variable_declaration) (left_dot (id type)) (right_dot ()))) 91)
-     ((((lhp variable_declaration) (left_dot (type)) (right_dot (id)))) 90)
-     ((((lhp statement) (left_dot (while_expression)) (right_dot ()))) 89)
-     ((((lhp statement) (left_dot (if_expression)) (right_dot ()))) 88)
-     ((((lhp statement) (left_dot (assignment)) (right_dot ()))) 87)
-     ((((lhp statement) (left_dot (";" function_call)) (right_dot ()))) 86)
-     ((((lhp statement) (left_dot (function_call)) (right_dot (";")))) 85)
+      96)
+     ((((lhp program) (left_dot (statement)) (right_dot ()))) 95)
+     ((((lhp statement) (left_dot (";" expression)) (right_dot ()))) 94)
+     ((((lhp assignment) (left_dot (";" expression = expression)) (right_dot ())))
+      93)
+     ((((lhp assignment) (left_dot (expression = expression)) (right_dot (";")))
+       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      92)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp assignment) (left_dot (= expression)) (right_dot (expression ";")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      91)
+     ((((lhp assignment) (left_dot (expression)) (right_dot (= expression ";")))
+       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp statement) (left_dot (expression)) (right_dot (";")))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      90)
+     ((((lhp variable_declaration) (left_dot (id type)) (right_dot ()))) 89)
+     ((((lhp variable_declaration) (left_dot (type)) (right_dot (id)))) 88)
+     ((((lhp statement) (left_dot (while_expression)) (right_dot ()))) 87)
+     ((((lhp statement) (left_dot (if_expression)) (right_dot ()))) 86)
+     ((((lhp statement) (left_dot (assignment)) (right_dot ()))) 85)
      ((((lhp statement) (left_dot (";" variable_declaration)) (right_dot ())))
       84)
      ((((lhp statement) (left_dot (variable_declaration)) (right_dot (";")))) 83)
@@ -1087,39 +1166,49 @@ let%expect_test "test canonical collection our grammar" =
         (right_dot ())))
       81)
      ((((lhp type) (left_dot ()) (right_dot (int)))
+       ((lhp if_expression) (left_dot ())
+        (right_dot
+         (if "(" expression bool_operator expression ")" { program } else {
+          program } ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp while_expression)
+        (left_dot (program { ")" expression bool_operator expression "(" while))
+        (right_dot (})))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
        ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
        ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
        ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
        ((lhp print_call) (left_dot ())
         (right_dot (print_double "(" expression ")")))
-       ((lhp if_expression) (left_dot ())
-        (right_dot
-         (if "(" expression bool_operator expression ")" { program } else {
-          program } ";")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
        ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
-       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
        ((lhp program) (left_dot (program)) (right_dot (statement)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
-       ((lhp while_expression)
-        (left_dot (program { ")" expression bool_operator expression "(" while))
-        (right_dot (})))
        ((lhp while_expression) (left_dot ())
         (right_dot
          (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
        ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
-       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
        ((lhp statement) (left_dot ()) (right_dot (assignment)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
        ((lhp type) (left_dot ()) (right_dot (double)))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
-       ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
        ((lhp statement) (left_dot ()) (right_dot (if_expression)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_str "(" expression ")")))
@@ -1127,73 +1216,62 @@ let%expect_test "test canonical collection our grammar" =
         (right_dot
          (if "(" expression bool_operator expression ")" { program } ";"))))
       80)
-     ((((lhp assignment) (left_dot (";" expression = id)) (right_dot ()))) 79)
-     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
-       ((lhp assignment) (left_dot (expression = id)) (right_dot (";")))
-       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
-      78)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp assignment) (left_dot (= id)) (right_dot (expression ";")))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      77)
-     ((((lhp assignment) (left_dot (id)) (right_dot (= expression ";")))) 76)
      ((((lhp type) (left_dot ()) (right_dot (int)))
+       ((lhp program) (left_dot ()) (right_dot (program statement)))
+       ((lhp if_expression) (left_dot ())
+        (right_dot
+         (if "(" expression bool_operator expression ")" { program } else {
+          program } ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp type) (left_dot ()) (right_dot (str)))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
+       ((lhp program) (left_dot ()) (right_dot (statement)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
        ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
        ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
        ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
-       ((lhp program) (left_dot ()) (right_dot (program statement)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_double "(" expression ")")))
        ((lhp while_expression)
         (left_dot ({ ")" expression bool_operator expression "(" while))
         (right_dot (program })))
-       ((lhp if_expression) (left_dot ())
-        (right_dot
-         (if "(" expression bool_operator expression ")" { program } else {
-          program } ";")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
        ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
-       ((lhp type) (left_dot ()) (right_dot (str)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
        ((lhp while_expression) (left_dot ())
         (right_dot
          (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
        ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
-       ((lhp program) (left_dot ()) (right_dot (statement)))
-       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
        ((lhp statement) (left_dot ()) (right_dot (assignment)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
        ((lhp type) (left_dot ()) (right_dot (double)))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
-       ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
        ((lhp statement) (left_dot ()) (right_dot (if_expression)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_str "(" expression ")")))
        ((lhp if_expression) (left_dot ())
         (right_dot
          (if "(" expression bool_operator expression ")" { program } ";"))))
-      75)
+      79)
      ((((lhp while_expression)
         (left_dot (")" expression bool_operator expression "(" while))
         (right_dot ({ program }))))
-      74)
+      78)
      ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
        ((lhp expression) (left_dot (expression)) (right_dot (- term)))
        ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
@@ -1202,20 +1280,36 @@ let%expect_test "test canonical collection our grammar" =
        ((lhp while_expression)
         (left_dot (expression bool_operator expression "(" while))
         (right_dot (")" { program }))))
-      73)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+      77)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
        ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
        ((lhp while_expression) (left_dot (bool_operator expression "(" while))
         (right_dot (expression ")" { program })))
-       ((lhp term) (left_dot ()) (right_dot (item)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
        ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
        ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      72)
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      76)
      ((((lhp bool_operator) (left_dot ()) (right_dot (>)))
        ((lhp bool_operator) (left_dot ()) (right_dot (<)))
        ((lhp while_expression) (left_dot (expression "(" while))
@@ -1229,75 +1323,101 @@ let%expect_test "test canonical collection our grammar" =
        ((lhp bool_operator) (left_dot ()) (right_dot (!=)))
        ((lhp bool_operator) (left_dot ()) (right_dot (==)))
        ((lhp expression) (left_dot (expression)) (right_dot (- term))))
-      71)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp while_expression) (left_dot ("(" while))
-        (right_dot (expression bool_operator expression ")" { program })))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      70)
-     ((((lhp while_expression) (left_dot (while))
-        (right_dot ("(" expression bool_operator expression ")" { program }))))
-      69)
-     ((((lhp type) (left_dot ()) (right_dot (int)))
-       ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+      75)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
        ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
-       ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
-       ((lhp program) (left_dot ()) (right_dot (program statement)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp while_expression) (left_dot ("(" while))
+        (right_dot (expression bool_operator expression ")" { program })))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      74)
+     ((((lhp while_expression) (left_dot (while))
+        (right_dot ("(" expression bool_operator expression ")" { program }))))
+      73)
+     ((((lhp type) (left_dot ()) (right_dot (int)))
+       ((lhp program) (left_dot ()) (right_dot (program statement)))
        ((lhp if_expression) (left_dot ())
         (right_dot
          (if "(" expression bool_operator expression ")" { program } else {
           program } ";")))
-       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
        ((lhp type) (left_dot ()) (right_dot (str)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
-       ((lhp while_expression) (left_dot ())
-        (right_dot
-         (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
-       ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
        ((lhp program) (left_dot ()) (right_dot (statement)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
        ((lhp statement) (left_dot ()) (right_dot (while_expression)))
        ((lhp if_expression)
         (left_dot ({ ")" expression bool_operator expression "(" if))
         (right_dot (program } else { program } ";")))
-       ((lhp statement) (left_dot ()) (right_dot (assignment)))
-       ((lhp print_call) (left_dot ())
-        (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
-       ((lhp type) (left_dot ()) (right_dot (double)))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
        ((lhp if_expression)
         (left_dot ({ ")" expression bool_operator expression "(" if))
         (right_dot (program } ";")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
        ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp while_expression) (left_dot ())
+        (right_dot
+         (while "(" expression bool_operator expression ")" { program })))
+       ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp statement) (left_dot ()) (right_dot (assignment)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp type) (left_dot ()) (right_dot (double)))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
        ((lhp statement) (left_dot ()) (right_dot (if_expression)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_str "(" expression ")")))
        ((lhp if_expression) (left_dot ())
         (right_dot
          (if "(" expression bool_operator expression ")" { program } ";"))))
-      68)
+      72)
      ((((lhp if_expression)
         (left_dot (")" expression bool_operator expression "(" if))
         (right_dot ({ program } else { program } ";")))
        ((lhp if_expression)
         (left_dot (")" expression bool_operator expression "(" if))
         (right_dot ({ program } ";"))))
-      67)
+      71)
      ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
        ((lhp if_expression)
         (left_dot (expression bool_operator expression "(" if))
@@ -1309,28 +1429,44 @@ let%expect_test "test canonical collection our grammar" =
        ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
        ((lhp expression) (left_dot (expression)) (right_dot (* term)))
        ((lhp expression) (left_dot (expression)) (right_dot (% term))))
-      66)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
+      70)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
        ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
        ((lhp expression) (left_dot ()) (right_dot (expression / term)))
        ((lhp if_expression) (left_dot (bool_operator expression "(" if))
         (right_dot (expression ")" { program } else { program } ";")))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
        ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
        ((lhp expression) (left_dot ()) (right_dot (expression % term)))
        ((lhp if_expression) (left_dot (bool_operator expression "(" if))
         (right_dot (expression ")" { program } ";")))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      65)
-     ((((lhp bool_operator) (left_dot (!=)) (right_dot ()))) 64)
-     ((((lhp bool_operator) (left_dot (>=)) (right_dot ()))) 63)
-     ((((lhp bool_operator) (left_dot (>)) (right_dot ()))) 62)
-     ((((lhp bool_operator) (left_dot (<=)) (right_dot ()))) 61)
-     ((((lhp bool_operator) (left_dot (<)) (right_dot ()))) 60)
-     ((((lhp bool_operator) (left_dot (==)) (right_dot ()))) 59)
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      69)
+     ((((lhp bool_operator) (left_dot (!=)) (right_dot ()))) 68)
+     ((((lhp bool_operator) (left_dot (>=)) (right_dot ()))) 67)
+     ((((lhp bool_operator) (left_dot (>)) (right_dot ()))) 66)
+     ((((lhp bool_operator) (left_dot (<=)) (right_dot ()))) 65)
+     ((((lhp bool_operator) (left_dot (<)) (right_dot ()))) 64)
+     ((((lhp bool_operator) (left_dot (==)) (right_dot ()))) 63)
      ((((lhp bool_operator) (left_dot ()) (right_dot (>)))
        ((lhp if_expression) (left_dot (expression "(" if))
         (right_dot (bool_operator expression ")" { program } ";")))
@@ -1347,34 +1483,246 @@ let%expect_test "test canonical collection our grammar" =
        ((lhp bool_operator) (left_dot ()) (right_dot (!=)))
        ((lhp bool_operator) (left_dot ()) (right_dot (==)))
        ((lhp expression) (left_dot (expression)) (right_dot (- term))))
-      58)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+      62)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
        ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
        ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
        ((lhp if_expression) (left_dot ("(" if))
         (right_dot
          (expression bool_operator expression ")" { program } else { program }
           ";")))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
        ((lhp if_expression) (left_dot ("(" if))
         (right_dot (expression bool_operator expression ")" { program } ";")))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      57)
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      61)
      ((((lhp if_expression) (left_dot (if))
         (right_dot ("(" expression bool_operator expression ")" { program } ";")))
        ((lhp if_expression) (left_dot (if))
         (right_dot
          ("(" expression bool_operator expression ")" { program } else { program
           } ";"))))
-      56)
+      60)
+     ((((lhp type) (left_dot (double)) (right_dot ()))) 59)
+     ((((lhp type) (left_dot (str)) (right_dot ()))) 58)
+     ((((lhp type) (left_dot (int)) (right_dot ()))) 57)
+     ((((lhp term) (left_dot (")" expression "(")) (right_dot ()))) 56)
+     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term)))
+       ((lhp term) (left_dot (expression "(")) (right_dot (")"))))
+      55)
+     ((((lhp get_call) (left_dot (")" expression , expression "(" get))
+        (right_dot ())))
+      54)
+     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp get_call) (left_dot (expression , expression "(" get))
+        (right_dot (")")))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      53)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp get_call) (left_dot (, expression "(" get))
+        (right_dot (expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      52)
+     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp get_call) (left_dot (expression "(" get))
+        (right_dot (, expression ")")))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      51)
+     ((((lhp set_call)
+        (left_dot (")" expression , expression , expression "(" set))
+        (right_dot ())))
+      50)
+     ((((lhp set_call) (left_dot (expression , expression , expression "(" set))
+        (right_dot (")")))
+       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      49)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp set_call) (left_dot (, expression , expression "(" set))
+        (right_dot (expression ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      48)
+     ((((lhp set_call) (left_dot (expression , expression "(" set))
+        (right_dot (, expression ")")))
+       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      47)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp set_call) (left_dot (, expression "(" set))
+        (right_dot (expression , expression ")")))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      46)
+     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp set_call) (left_dot (expression "(" set))
+        (right_dot (, expression , expression ")")))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      45)
+     ((((lhp print_call) (left_dot (")" expression "(" print_int))
+        (right_dot ())))
+      44)
+     ((((lhp print_call) (left_dot (expression "(" print_int)) (right_dot (")")))
+       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      43)
+     ((((lhp print_call) (left_dot (")" expression "(" print_str))
+        (right_dot ())))
+      42)
+     ((((lhp print_call) (left_dot (expression "(" print_str)) (right_dot (")")))
+       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
+       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
+      41)
+     ((((lhp expression) (left_dot (term)) (right_dot ()))) 40)
      ((((lhp print_call) (left_dot (")" expression "(" print_double))
         (right_dot ())))
-      55)
+      39)
+     ((((lhp expression) (left_dot (term % expression)) (right_dot ()))) 38)
+     ((((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot (% expression)) (right_dot (term))))
+      37)
+     ((((lhp expression) (left_dot (term / expression)) (right_dot ()))) 36)
+     ((((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot (/ expression)) (right_dot (term))))
+      35)
+     ((((lhp expression) (left_dot (term * expression)) (right_dot ()))) 34)
+     ((((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot (* expression)) (right_dot (term))))
+      33)
+     ((((lhp expression) (left_dot (term - expression)) (right_dot ()))) 32)
+     ((((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot (- expression)) (right_dot (term))))
+      31)
+     ((((lhp expression) (left_dot (term + expression)) (right_dot ()))) 30)
+     ((((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot (+ expression)) (right_dot (term))))
+      29)
      ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
        ((lhp expression) (left_dot (expression)) (right_dot (- term)))
        ((lhp print_call) (left_dot (expression "(" print_double))
@@ -1382,264 +1730,261 @@ let%expect_test "test canonical collection our grammar" =
        ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
        ((lhp expression) (left_dot (expression)) (right_dot (* term)))
        ((lhp expression) (left_dot (expression)) (right_dot (% term))))
-      54)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp print_call) (left_dot ("(" print_double))
-        (right_dot (expression ")")))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      53)
-     ((((lhp print_call) (left_dot (print_double))
-        (right_dot ("(" expression ")"))))
-      52)
-     ((((lhp print_call) (left_dot (")" expression "(" print_str))
-        (right_dot ())))
-      51)
-     ((((lhp print_call) (left_dot (expression "(" print_str)) (right_dot (")")))
-       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
-      50)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp print_call) (left_dot ("(" print_str)) (right_dot (expression ")")))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      49)
-     ((((lhp print_call) (left_dot (print_str)) (right_dot ("(" expression ")"))))
-      48)
-     ((((lhp print_call) (left_dot (")" expression "(" print_int))
-        (right_dot ())))
-      47)
-     ((((lhp print_call) (left_dot (expression "(" print_int)) (right_dot (")")))
-       ((lhp expression) (left_dot (expression)) (right_dot (+ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
-      46)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp print_call) (left_dot ("(" print_int)) (right_dot (expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      45)
-     ((((lhp print_call) (left_dot (print_int)) (right_dot ("(" expression ")"))))
-      44)
-     ((((lhp read_call) (left_dot (")" "(" read_double)) (right_dot ()))) 43)
-     ((((lhp read_call) (left_dot ("(" read_double)) (right_dot (")")))) 42)
-     ((((lhp read_call) (left_dot (read_double)) (right_dot ("(" ")")))) 41)
-     ((((lhp read_call) (left_dot (")" "(" read_str)) (right_dot ()))) 40)
-     ((((lhp read_call) (left_dot ("(" read_str)) (right_dot (")")))) 39)
-     ((((lhp read_call) (left_dot (read_str)) (right_dot ("(" ")")))) 38)
-     ((((lhp read_call) (left_dot (")" "(" read_int)) (right_dot ()))) 37)
-     ((((lhp read_call) (left_dot ("(" read_int)) (right_dot (")")))) 36)
-     ((((lhp read_call) (left_dot (read_int)) (right_dot ("(" ")")))) 35)
-     ((((lhp set_call) (left_dot (")" expression , expression , id "(" set))
-        (right_dot ())))
-      34)
-     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (% term)))
-       ((lhp set_call) (left_dot (expression , expression , id "(" set))
-        (right_dot (")"))))
-      33)
-     ((((lhp set_call) (left_dot (, expression , id "(" set))
-        (right_dot (expression ")")))
-       ((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      32)
-     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
-       ((lhp set_call) (left_dot (expression , id "(" set))
-        (right_dot (, expression ")")))
-       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
-      31)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp set_call) (left_dot (, id "(" set))
-        (right_dot (expression , expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      30)
-     ((((lhp set_call) (left_dot (id "(" set))
-        (right_dot (, expression , expression ")"))))
-      29)
-     ((((lhp set_call) (left_dot ("(" set))
-        (right_dot (id , expression , expression ")"))))
       28)
-     ((((lhp set_call) (left_dot (set))
-        (right_dot ("(" id , expression , expression ")"))))
-      27)
-     ((((lhp get_call) (left_dot (")" expression , id "(" get)) (right_dot ())))
-      26)
-     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
-       ((lhp get_call) (left_dot (expression , id "(" get)) (right_dot (")")))
-       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (% term))))
-      25)
-     ((((lhp expression) (left_dot (term)) (right_dot ()))) 24)
-     ((((lhp term) (left_dot (")" expression "(")) (right_dot ()))) 23)
-     ((((lhp expression) (left_dot (term % expression)) (right_dot ()))) 22)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot (% expression)) (right_dot (term))))
-      21)
-     ((((lhp expression) (left_dot (term / expression)) (right_dot ()))) 20)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot (/ expression)) (right_dot (term)))
-       ((lhp item) (left_dot ()) (right_dot (const))))
-      19)
-     ((((lhp expression) (left_dot (term * expression)) (right_dot ()))) 18)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot (* expression)) (right_dot (term))))
-      17)
-     ((((lhp expression) (left_dot (term - expression)) (right_dot ()))) 16)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot (- expression)) (right_dot (term)))
-       ((lhp item) (left_dot ()) (right_dot (const))))
-      15)
-     ((((lhp expression) (left_dot (term + expression)) (right_dot ()))) 14)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot (+ expression)) (right_dot (term))))
-      13)
-     ((((lhp expression) (left_dot (expression)) (right_dot (+ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (- term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (/ term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (* term)))
-       ((lhp expression) (left_dot (expression)) (right_dot (% term)))
-       ((lhp term) (left_dot (expression "(")) (right_dot (")"))))
-      12)
-     ((((lhp term) (left_dot (item)) (right_dot ()))) 11)
-     ((((lhp item) (left_dot (const)) (right_dot ()))) 10)
-     ((((lhp item) (left_dot (id)) (right_dot ()))) 9)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ("(")) (right_dot (expression ")")))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      8)
-     ((((lhp item) (left_dot ()) (right_dot (id)))
-       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
-       ((lhp get_call) (left_dot (, id "(" get)) (right_dot (expression ")")))
-       ((lhp item) (left_dot ()) (right_dot (const)))
-       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
-       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
-       ((lhp term) (left_dot ()) (right_dot (item)))
-       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
-       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
-       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
-       ((lhp expression) (left_dot ()) (right_dot (term))))
-      7)
-     ((((lhp get_call) (left_dot (id "(" get)) (right_dot (, expression ")"))))
-      6)
-     ((((lhp get_call) (left_dot ("(" get)) (right_dot (id , expression ")"))))
-      5)
-     ((((lhp get_call) (left_dot (get)) (right_dot ("(" id , expression ")"))))
-      4)
-     ((((lhp type) (left_dot (double)) (right_dot ()))) 3)
-     ((((lhp type) (left_dot (str)) (right_dot ()))) 2)
-     ((((lhp type) (left_dot (int)) (right_dot ()))) 1)
-     ((((lhp type) (left_dot ()) (right_dot (int)))
-       ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+     ((((lhp expression) (left_dot (print_call)) (right_dot ()))) 27)
+     ((((lhp expression) (left_dot (read_call)) (right_dot ()))) 26)
+     ((((lhp expression) (left_dot (set_call)) (right_dot ()))) 25)
+     ((((lhp expression) (left_dot (get_call)) (right_dot ()))) 24)
+     ((((lhp term) (left_dot (const)) (right_dot ()))) 23)
+     ((((lhp term) (left_dot (id)) (right_dot ()))) 22)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
        ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
-       ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
-       ((lhp program) (left_dot ()) (right_dot (program statement)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp print_call) (left_dot ("(" print_double))
+        (right_dot (expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      21)
+     ((((lhp print_call) (left_dot (print_double))
+        (right_dot ("(" expression ")"))))
+      20)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp print_call) (left_dot ("(" print_str)) (right_dot (expression ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      19)
+     ((((lhp print_call) (left_dot (print_str)) (right_dot ("(" expression ")"))))
+      18)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp print_call) (left_dot ("(" print_int)) (right_dot (expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      17)
+     ((((lhp print_call) (left_dot (print_int)) (right_dot ("(" expression ")"))))
+      16)
+     ((((lhp read_call) (left_dot (")" "(" read_double)) (right_dot ()))) 15)
+     ((((lhp read_call) (left_dot ("(" read_double)) (right_dot (")")))) 14)
+     ((((lhp read_call) (left_dot (read_double)) (right_dot ("(" ")")))) 13)
+     ((((lhp read_call) (left_dot (")" "(" read_str)) (right_dot ()))) 12)
+     ((((lhp read_call) (left_dot ("(" read_str)) (right_dot (")")))) 11)
+     ((((lhp read_call) (left_dot (read_str)) (right_dot ("(" ")")))) 10)
+     ((((lhp read_call) (left_dot (")" "(" read_int)) (right_dot ()))) 9)
+     ((((lhp read_call) (left_dot ("(" read_int)) (right_dot (")")))) 8)
+     ((((lhp read_call) (left_dot (read_int)) (right_dot ("(" ")")))) 7)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp set_call) (left_dot ("(" set))
+        (right_dot (expression , expression , expression ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      6)
+     ((((lhp set_call) (left_dot (set))
+        (right_dot ("(" expression , expression , expression ")"))))
+      5)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp get_call) (left_dot ("(" get))
+        (right_dot (expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      4)
+     ((((lhp get_call) (left_dot (get))
+        (right_dot ("(" expression , expression ")"))))
+      3)
+     ((((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp term) (left_dot ()) (right_dot (id)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_int "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp term) (left_dot ("(")) (right_dot (expression ")")))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_str "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (set_call))))
+      2)
+     ((((lhp type) (left_dot ()) (right_dot (int)))
+       ((lhp program) (left_dot ()) (right_dot (program statement)))
        ((lhp if_expression) (left_dot ())
         (right_dot
          (if "(" expression bool_operator expression ")" { program } else {
           program } ";")))
-       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
-       ((lhp assignment) (left_dot ()) (right_dot (id = expression ";")))
+       ((lhp term) (left_dot ()) (right_dot (id)))
        ((lhp type) (left_dot ()) (right_dot (str)))
-       ((lhp function_call) (left_dot ()) (right_dot (get_call)))
+       ((lhp statement) (left_dot ()) (right_dot (expression ";")))
+       ((lhp program) (left_dot ()) (right_dot (statement)))
+       ((lhp expression) (left_dot ()) (right_dot (print_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression + term)))
+       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp term) (left_dot ()) (right_dot (const)))
+       ((lhp expression) (left_dot ()) (right_dot (expression - term)))
+       ((lhp set_call) (left_dot ())
+        (right_dot (set "(" expression , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression % term)))
+       ((lhp expression) (left_dot ()) (right_dot (set_call)))
+       ((lhp assignment) (left_dot ()) (right_dot (expression = expression ";")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_int "(" ")")))
+       ((lhp read_call) (left_dot ()) (right_dot (read_str "(" ")")))
+       ((lhp statement) (left_dot ()) (right_dot (variable_declaration ";")))
+       ((lhp print_call) (left_dot ())
+        (right_dot (print_double "(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (expression * term)))
+       ((lhp read_call) (left_dot ()) (right_dot (read_double "(" ")")))
+       ((lhp term) (left_dot ()) (right_dot ("(" expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (get_call)))
        ((lhp while_expression) (left_dot ())
         (right_dot
          (while "(" expression bool_operator expression ")" { program })))
-       ((lhp function_call) (left_dot ()) (right_dot (set_call)))
        ((lhp variable_declaration) (left_dot ()) (right_dot (type id)))
-       ((lhp statement) (left_dot ()) (right_dot (function_call ";")))
-       ((lhp program) (left_dot ()) (right_dot (statement)))
-       ((lhp statement) (left_dot ()) (right_dot (while_expression)))
+       ((lhp expression) (left_dot ()) (right_dot (term)))
        ((lhp statement) (left_dot ()) (right_dot (assignment)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_int "(" expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (print_call)))
        ((lhp type) (left_dot ()) (right_dot (double)))
-       ((lhp get_call) (left_dot ()) (right_dot (get "(" id , expression ")")))
-       ((lhp function_call) (left_dot ()) (right_dot (read_call)))
-       ((lhp set_call) (left_dot ())
-        (right_dot (set "(" id , expression , expression ")")))
+       ((lhp expression) (left_dot ()) (right_dot (read_call)))
+       ((lhp expression) (left_dot ()) (right_dot (expression / term)))
+       ((lhp start) (left_dot ({)) (right_dot (program })))
+       ((lhp get_call) (left_dot ())
+        (right_dot (get "(" expression , expression ")")))
        ((lhp statement) (left_dot ()) (right_dot (if_expression)))
        ((lhp print_call) (left_dot ())
         (right_dot (print_str "(" expression ")")))
        ((lhp if_expression) (left_dot ())
         (right_dot
-         (if "(" expression bool_operator expression ")" { program } ";")))
-       ((lhp S') (left_dot ()) (right_dot (program))))
+         (if "(" expression bool_operator expression ")" { program } ";"))))
+      1)
+     ((((lhp start) (left_dot ()) (right_dot ({ program })))
+       ((lhp S') (left_dot ()) (right_dot (start))))
       0)) |}]
 ;;
+
 (*TODO test it fails on invalid output bands*)
 let%expect_test "test parser output works toy grammar" =
   let grammar =
@@ -1766,4 +2111,396 @@ let%expect_test "test parser works on more serious grammar" =
     |   9. |          c |   - |   - |
     |  10. |          d |   - |  11 |
     |  11. |          b |   - |   - | |}]
+;;
+
+let%expect_test "test p1.c works" =
+  let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in
+  let parser = Parser.create grammar in
+  let p1 =
+    {|
+    {
+      int a;
+      int b;
+      int c;
+      a = read_int();
+      b = read_int();
+      c = read_int();
+      int ans;
+      ans = a;
+      if (b > ans) {
+        ans = b
+      }
+      if (c > ans) {
+        ans = c;
+      }
+      print_int(ans);
+    }
+  |}
+  in
+  let pif = scan ~program:p1 |> Or_error.ok_exn |> snd in
+  let tokens = List.map ~f:fst (Pif.to_list pif) in
+  let parser_output = Parser.parse parser tokens |> ok_exn in
+  print_string (Parser.Parser_output.to_string parser_output);
+  [%expect.unreachable]
+[@@expect.uncaught_exn
+  {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  ("Goto to empty state" (state 92) })
+  Raised at Base__Error.raise in file "src/error.ml" (inlined), line 9, characters 14-30
+  Called from Base__Or_error.ok_exn in file "src/or_error.ml", line 107, characters 17-32
+  Called from Test__Compiler.(fun) in file "test/compiler.ml", line 2139, characters 3-38
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 234, characters 12-19 |}]
+;;
+
+let%expect_test "test p2.c works" =
+  let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in
+  let parser = Parser.create grammar in
+  let p2 =
+    {|
+    {
+      int n;
+      n = read_int();
+      int prime;
+      prime = 1;
+      int d;
+      d = 2;
+      while (d < n) {
+        if (n % d == 0) {
+          prime = 0;
+        };
+        d = d + 1;
+      }
+      if (prime == 0) {
+        print_str("not prime");
+      } else {
+        print_str("prime");
+      };
+
+    }
+  |}
+  in
+  let pif = scan ~program:p2 |> Or_error.ok_exn |> snd in
+  let tokens = List.map ~f:fst (Pif.to_list pif) in
+  let parser_output = Parser.parse parser tokens |> ok_exn in
+  print_string (Parser.Parser_output.to_string parser_output);
+  [%expect
+    {|
+    |   0. |      start |   1 |   - |
+    |   1. |          { |   - |   2 |
+    |   2. |    program |   4 |   3 |
+    |   3. |          } |   - |   - |
+    |   4. |    program |  46 |   5 |
+    |   5. |  statement |   6 |   - |
+    |   6. | if_expression |   7 |   - |
+    |   7. |         if |   - |   8 |
+    |   8. |          ( |   - |   9 |
+    |   9. | expression |  44 |  10 |
+    |  10. | bool_operator |  43 |  11 |
+    |  11. | expression |  41 |  12 |
+    |  12. |          ) |   - |  13 |
+    |  13. |          { |   - |  14 |
+    |  14. |    program |  31 |  15 |
+    |  15. |          } |   - |  16 |
+    |  16. |       else |   - |  17 |
+    |  17. |          { |   - |  18 |
+    |  18. |    program |  21 |  19 |
+    |  19. |          } |   - |  20 |
+    |  20. |          ; |   - |   - |
+    |  21. |  statement |  22 |   - |
+    |  22. | expression |  24 |  23 |
+    |  23. |          ; |   - |   - |
+    |  24. | print_call |  25 |   - |
+    |  25. |  print_str |   - |  26 |
+    |  26. |          ( |   - |  27 |
+    |  27. | expression |  29 |  28 |
+    |  28. |          ) |   - |   - |
+    |  29. |       term |  30 |   - |
+    |  30. |      const |   - |   - |
+    |  31. |  statement |  32 |   - |
+    |  32. | expression |  34 |  33 |
+    |  33. |          ; |   - |   - |
+    |  34. | print_call |  35 |   - |
+    |  35. |  print_str |   - |  36 |
+    |  36. |          ( |   - |  37 |
+    |  37. | expression |  39 |  38 |
+    |  38. |          ) |   - |   - |
+    |  39. |       term |  40 |   - |
+    |  40. |      const |   - |   - |
+    |  41. |       term |  42 |   - |
+    |  42. |      const |   - |   - |
+    |  43. |         == |   - |   - |
+    |  44. |       term |  45 |   - |
+    |  45. |         id |   - |   - |
+    |  46. |    program | 109 |  47 |
+    |  47. |  statement |  48 |   - |
+    |  48. | while_expression |  49 |   - |
+    |  49. |      while |   - |  50 |
+    |  50. |          ( |   - |  51 |
+    |  51. | expression | 107 |  52 |
+    |  52. | bool_operator | 106 |  53 |
+    |  53. | expression | 104 |  54 |
+    |  54. |          ) |   - |  55 |
+    |  55. |          { |   - |  56 |
+    |  56. |    program |  58 |  57 |
+    |  57. |          } |   - |   - |
+    |  58. |    program |  73 |  59 |
+    |  59. |  statement |  60 |   - |
+    |  60. | assignment |  61 |   - |
+    |  61. | expression |  71 |  62 |
+    |  62. |          = |   - |  63 |
+    |  63. | expression |  65 |  64 |
+    |  64. |          ; |   - |   - |
+    |  65. | expression |  69 |  66 |
+    |  66. |          + |   - |  67 |
+    |  67. |       term |  68 |   - |
+    |  68. |      const |   - |   - |
+    |  69. |       term |  70 |   - |
+    |  70. |         id |   - |   - |
+    |  71. |       term |  72 |   - |
+    |  72. |         id |   - |   - |
+    |  73. |  statement |  74 |   - |
+    |  74. | if_expression |  75 |   - |
+    |  75. |         if |   - |  76 |
+    |  76. |          ( |   - |  77 |
+    |  77. | expression |  98 |  78 |
+    |  78. | bool_operator |  97 |  79 |
+    |  79. | expression |  95 |  80 |
+    |  80. |          ) |   - |  81 |
+    |  81. |          { |   - |  82 |
+    |  82. |    program |  85 |  83 |
+    |  83. |          } |   - |  84 |
+    |  84. |          ; |   - |   - |
+    |  85. |  statement |  86 |   - |
+    |  86. | assignment |  87 |   - |
+    |  87. | expression |  93 |  88 |
+    |  88. |          = |   - |  89 |
+    |  89. | expression |  91 |  90 |
+    |  90. |          ; |   - |   - |
+    |  91. |       term |  92 |   - |
+    |  92. |      const |   - |   - |
+    |  93. |       term |  94 |   - |
+    |  94. |         id |   - |   - |
+    |  95. |       term |  96 |   - |
+    |  96. |      const |   - |   - |
+    |  97. |         == |   - |   - |
+    |  98. | expression | 102 |  99 |
+    |  99. |          % |   - | 100 |
+    | 100. |       term | 101 |   - |
+    | 101. |         id |   - |   - |
+    | 102. |       term | 103 |   - |
+    | 103. |         id |   - |   - |
+    | 104. |       term | 105 |   - |
+    | 105. |         id |   - |   - |
+    | 106. |          < |   - |   - |
+    | 107. |       term | 108 |   - |
+    | 108. |         id |   - |   - |
+    | 109. |    program | 120 | 110 |
+    | 110. |  statement | 111 |   - |
+    | 111. | assignment | 112 |   - |
+    | 112. | expression | 118 | 113 |
+    | 113. |          = |   - | 114 |
+    | 114. | expression | 116 | 115 |
+    | 115. |          ; |   - |   - |
+    | 116. |       term | 117 |   - |
+    | 117. |      const |   - |   - |
+    | 118. |       term | 119 |   - |
+    | 119. |         id |   - |   - |
+    | 120. |    program | 127 | 121 |
+    | 121. |  statement | 122 |   - |
+    | 122. | variable_declaration | 124 | 123 |
+    | 123. |          ; |   - |   - |
+    | 124. |       type | 126 | 125 |
+    | 125. |         id |   - |   - |
+    | 126. |        int |   - |   - |
+    | 127. |    program | 138 | 128 |
+    | 128. |  statement | 129 |   - |
+    | 129. | assignment | 130 |   - |
+    | 130. | expression | 136 | 131 |
+    | 131. |          = |   - | 132 |
+    | 132. | expression | 134 | 133 |
+    | 133. |          ; |   - |   - |
+    | 134. |       term | 135 |   - |
+    | 135. |      const |   - |   - |
+    | 136. |       term | 137 |   - |
+    | 137. |         id |   - |   - |
+    | 138. |    program | 145 | 139 |
+    | 139. |  statement | 140 |   - |
+    | 140. | variable_declaration | 142 | 141 |
+    | 141. |          ; |   - |   - |
+    | 142. |       type | 144 | 143 |
+    | 143. |         id |   - |   - |
+    | 144. |        int |   - |   - |
+    | 145. |    program | 158 | 146 |
+    | 146. |  statement | 147 |   - |
+    | 147. | assignment | 148 |   - |
+    | 148. | expression | 156 | 149 |
+    | 149. |          = |   - | 150 |
+    | 150. | expression | 152 | 151 |
+    | 151. |          ; |   - |   - |
+    | 152. |  read_call | 153 |   - |
+    | 153. |   read_int |   - | 154 |
+    | 154. |          ( |   - | 155 |
+    | 155. |          ) |   - |   - |
+    | 156. |       term | 157 |   - |
+    | 157. |         id |   - |   - |
+    | 158. |  statement | 159 |   - |
+    | 159. | variable_declaration | 161 | 160 |
+    | 160. |          ; |   - |   - |
+    | 161. |       type | 163 | 162 |
+    | 162. |         id |   - |   - |
+    | 163. |        int |   - |   - | |}]
+;;
+
+let%expect_test "test p3.c works" =
+  let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in
+  let parser = Parser.create grammar in
+  let p3 =
+    {|
+    {
+      int n;
+      n = read_int();
+      int i;
+      i = 0;
+      int sum;
+      sum = 0;
+      while (i < n) {
+        int x;
+        x = read_int();
+        sum = sum + x;
+      }
+      print_int(sum);
+
+    }
+  |}
+  in
+  let pif = scan ~program:p3 |> Or_error.ok_exn |> snd in
+  let tokens = List.map ~f:fst (Pif.to_list pif) in
+  let parser_output = Parser.parse parser tokens |> ok_exn in
+  print_string (Parser.Parser_output.to_string parser_output);
+  [%expect
+    {|
+    |   0. |      start |   1 |   - |
+    |   1. |          { |   - |   2 |
+    |   2. |    program |   4 |   3 |
+    |   3. |          } |   - |   - |
+    |   4. |    program |  15 |   5 |
+    |   5. |  statement |   6 |   - |
+    |   6. | expression |   8 |   7 |
+    |   7. |          ; |   - |   - |
+    |   8. | print_call |   9 |   - |
+    |   9. |  print_int |   - |  10 |
+    |  10. |          ( |   - |  11 |
+    |  11. | expression |  13 |  12 |
+    |  12. |          ) |   - |   - |
+    |  13. |       term |  14 |   - |
+    |  14. |         id |   - |   - |
+    |  15. |    program |  66 |  16 |
+    |  16. |  statement |  17 |   - |
+    |  17. | while_expression |  18 |   - |
+    |  18. |      while |   - |  19 |
+    |  19. |          ( |   - |  20 |
+    |  20. | expression |  64 |  21 |
+    |  21. | bool_operator |  63 |  22 |
+    |  22. | expression |  61 |  23 |
+    |  23. |          ) |   - |  24 |
+    |  24. |          { |   - |  25 |
+    |  25. |    program |  27 |  26 |
+    |  26. |          } |   - |   - |
+    |  27. |    program |  42 |  28 |
+    |  28. |  statement |  29 |   - |
+    |  29. | assignment |  30 |   - |
+    |  30. | expression |  40 |  31 |
+    |  31. |          = |   - |  32 |
+    |  32. | expression |  34 |  33 |
+    |  33. |          ; |   - |   - |
+    |  34. | expression |  38 |  35 |
+    |  35. |          + |   - |  36 |
+    |  36. |       term |  37 |   - |
+    |  37. |         id |   - |   - |
+    |  38. |       term |  39 |   - |
+    |  39. |         id |   - |   - |
+    |  40. |       term |  41 |   - |
+    |  41. |         id |   - |   - |
+    |  42. |    program |  55 |  43 |
+    |  43. |  statement |  44 |   - |
+    |  44. | assignment |  45 |   - |
+    |  45. | expression |  53 |  46 |
+    |  46. |          = |   - |  47 |
+    |  47. | expression |  49 |  48 |
+    |  48. |          ; |   - |   - |
+    |  49. |  read_call |  50 |   - |
+    |  50. |   read_int |   - |  51 |
+    |  51. |          ( |   - |  52 |
+    |  52. |          ) |   - |   - |
+    |  53. |       term |  54 |   - |
+    |  54. |         id |   - |   - |
+    |  55. |  statement |  56 |   - |
+    |  56. | variable_declaration |  58 |  57 |
+    |  57. |          ; |   - |   - |
+    |  58. |       type |  60 |  59 |
+    |  59. |         id |   - |   - |
+    |  60. |        int |   - |   - |
+    |  61. |       term |  62 |   - |
+    |  62. |         id |   - |   - |
+    |  63. |          < |   - |   - |
+    |  64. |       term |  65 |   - |
+    |  65. |         id |   - |   - |
+    |  66. |    program |  77 |  67 |
+    |  67. |  statement |  68 |   - |
+    |  68. | assignment |  69 |   - |
+    |  69. | expression |  75 |  70 |
+    |  70. |          = |   - |  71 |
+    |  71. | expression |  73 |  72 |
+    |  72. |          ; |   - |   - |
+    |  73. |       term |  74 |   - |
+    |  74. |      const |   - |   - |
+    |  75. |       term |  76 |   - |
+    |  76. |         id |   - |   - |
+    |  77. |    program |  84 |  78 |
+    |  78. |  statement |  79 |   - |
+    |  79. | variable_declaration |  81 |  80 |
+    |  80. |          ; |   - |   - |
+    |  81. |       type |  83 |  82 |
+    |  82. |         id |   - |   - |
+    |  83. |        int |   - |   - |
+    |  84. |    program |  95 |  85 |
+    |  85. |  statement |  86 |   - |
+    |  86. | assignment |  87 |   - |
+    |  87. | expression |  93 |  88 |
+    |  88. |          = |   - |  89 |
+    |  89. | expression |  91 |  90 |
+    |  90. |          ; |   - |   - |
+    |  91. |       term |  92 |   - |
+    |  92. |      const |   - |   - |
+    |  93. |       term |  94 |   - |
+    |  94. |         id |   - |   - |
+    |  95. |    program | 102 |  96 |
+    |  96. |  statement |  97 |   - |
+    |  97. | variable_declaration |  99 |  98 |
+    |  98. |          ; |   - |   - |
+    |  99. |       type | 101 | 100 |
+    | 100. |         id |   - |   - |
+    | 101. |        int |   - |   - |
+    | 102. |    program | 115 | 103 |
+    | 103. |  statement | 104 |   - |
+    | 104. | assignment | 105 |   - |
+    | 105. | expression | 113 | 106 |
+    | 106. |          = |   - | 107 |
+    | 107. | expression | 109 | 108 |
+    | 108. |          ; |   - |   - |
+    | 109. |  read_call | 110 |   - |
+    | 110. |   read_int |   - | 111 |
+    | 111. |          ( |   - | 112 |
+    | 112. |          ) |   - |   - |
+    | 113. |       term | 114 |   - |
+    | 114. |         id |   - |   - |
+    | 115. |  statement | 116 |   - |
+    | 116. | variable_declaration | 118 | 117 |
+    | 117. |          ; |   - |   - |
+    | 118. |       type | 120 | 119 |
+    | 119. |         id |   - |   - |
+    | 120. |        int |   - |   - | |}]
 ;;
