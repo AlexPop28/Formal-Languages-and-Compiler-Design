@@ -575,7 +575,7 @@ let%expect_test "test goto to empty state" =
       [ { lhp = "S"; left_dot = [ "a" ]; right_dot = [ "A" ] } ]
   in
   let state : Parser.State.t = { items } in
-  let result = Parser.For_testing.goto parser state "B" |> Or_error.ok_exn in
+  let result = Parser.For_testing.goto parser state "b" |> Or_error.ok_exn in
   print_string (Parser.State.to_string_hum result);
   [%expect ""]
 ;;
@@ -591,6 +591,19 @@ let%expect_test "test goto" =
   let result = Parser.For_testing.goto parser state "a" |> Or_error.ok_exn in
   print_string (Parser.State.to_string_hum result);
   [%expect "[S -> a.A] ; [A -> .c] ; [A -> .b A]"]
+;;
+
+let%expect_test "test goto fails if symbol not part of grammar" =
+  let parser = get_parser () in
+  let items =
+    Hash_set.of_list
+      (module Parser.Lr0_item)
+      [ { lhp = "S"; left_dot = [ "a" ]; right_dot = [ "A" ] } ]
+  in
+  let state : Parser.State.t = { items } in
+  let result = Parser.For_testing.goto parser state "B" in 
+  print_s [%sexp (result: Parser.State.t Or_error.t)];
+  [%expect "(Error \"B is not part of grammar\")"]
 ;;
 
 let%expect_test "test canonical collection basic" =

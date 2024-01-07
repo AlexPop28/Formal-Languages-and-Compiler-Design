@@ -36,14 +36,17 @@ let rec closure t (items : Lr0_item.t Hash_set.t) : State.t =
 ;;
 
 let goto t state symbol =
-  (* TODO: validate that symbol is in the grammar *)
-  let%map.Or_error lr0_items =
-    State.get_all_lr0_items_right_dot_starting_with_symbol state symbol
-    |> Hash_set.to_list
-    |> List.map ~f:Lr0_item.shift
-    |> Or_error.all
-  in
-  Hash_set.of_list (module Lr0_item) lr0_items |> closure t
+  if not (Enhanced_grammar.is_symbol_part_of_grammar t.grammar symbol) then (
+    Or_error.error_s [%sexp ((String.concat [symbol; " is not part of grammar"]): string)]
+  ) else (
+    let%map.Or_error lr0_items =
+      State.get_all_lr0_items_right_dot_starting_with_symbol state symbol
+      |> Hash_set.to_list
+      |> List.map ~f:Lr0_item.shift
+      |> Or_error.all
+    in
+    Hash_set.of_list (module Lr0_item) lr0_items |> closure t
+  )
 ;;
 
 let get_parsing_table t =

@@ -49,3 +49,6 @@ let get_index_of_production t (lhp1, rhp1) =
           (rhp1 : string list)]
   | Some (i, _) -> Ok i
 ;;
+
+let is_symbol_part_of_grammar t symbol = 
+  List.mem t.terminals symbol ~equal:String.equal || List.mem t.non_terminals symbol ~equal:String.equal
