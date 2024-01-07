@@ -1,6 +1,1 @@
-a
-b
-b
-b
-b
-c
+abbbbc
