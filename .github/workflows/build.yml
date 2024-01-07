@@ -1,0 +1,28 @@
+name: Run Dune Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up OCaml and Dune
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: 4.14.x
+
+    - name: Install dependencies
+      run: opam install --deps-only ./labs/lab2/compiler
+
+    - name: Run Dune Test
+      run: cd ./labs/lab2/compiler && opam exec -- dune runtest

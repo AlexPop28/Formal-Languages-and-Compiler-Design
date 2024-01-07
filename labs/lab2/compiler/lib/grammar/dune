@@ -1,5 +1,6 @@
 (library
- (name pif)
+ (name grammar)
+ (modules grammar)
  (libraries core)
  (preprocess
   (pps ppx_jane)))

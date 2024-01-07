@@ -1,5 +1,6 @@
 (library
- (name     finite_automaton)
- (modules  finite_automaton)
- (libraries            core)
- (preprocess (pps ppx_jane)))
+ (name finite_automaton)
+ (modules finite_automaton)
+ (libraries core)
+ (preprocess
+  (pps ppx_jane)))
