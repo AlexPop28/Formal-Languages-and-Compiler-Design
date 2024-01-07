@@ -537,7 +537,9 @@ let get_parser () =
     ; terminals = [ "a"; "b"; "c" ]
     ; starting_symbol = "S"
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    } |> Grammar.validate |> Or_error.ok_exn
+    }
+    |> Grammar.validate
+    |> Or_error.ok_exn
   in
   let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
   Parser.create grammar
@@ -970,18 +972,18 @@ let%expect_test "test get production is ok" =
 
 (* TODO Uncomment this to check conflicts in our grammar *)
 (*
-let%expect_test "test canonical collection our grammar" =
-  let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in
-  let parser = Parser.create grammar in
-  let parsing_table = Parser.get_parsing_table parser |> ok_exn in
-  let canonical_collection =
-    Parser.Parsing_table.For_testing.get_canonical_collection parsing_table
-  in
-  List.iter canonical_collection ~f:(fun (state, _id) ->
-    let action = Parser.State.get_action state grammar in
-    print_s [%sexp (action : Parser.State.Action.t Or_error.t)]);
-  [%expect {||}]
-;;
+   let%expect_test "test canonical collection our grammar" =
+   let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in
+   let parser = Parser.create grammar in
+   let parsing_table = Parser.get_parsing_table parser |> ok_exn in
+   let canonical_collection =
+   Parser.Parsing_table.For_testing.get_canonical_collection parsing_table
+   in
+   List.iter canonical_collection ~f:(fun (state, _id) ->
+   let action = Parser.State.get_action state grammar in
+   print_s [%sexp (action : Parser.State.Action.t Or_error.t)]);
+   [%expect {||}]
+   ;;
 *)
 (*TODO test it fails on invalid output bands*)
 let%expect_test "test parser output works toy grammar" =
@@ -990,22 +992,22 @@ let%expect_test "test parser output works toy grammar" =
     ; terminals = [ "a"; "b"; "c" ]
     ; starting_symbol = "S"
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    } |> Grammar.validate
+    }
+    |> Grammar.validate
   in
-  match grammar with 
-  | Error _ -> print_s [%sexp (grammar: Grammar.t Or_error.t)]
-  | Ok grammar -> (
-    (*
-       abbbbc
-       1 2 2 2 2 3
-    *)
-    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-    let parser = Parser.create grammar in
-    let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
-    print_string (Parser.Parser_output.to_string parser_output);
-  );
-  [%expect
-    {|
+  match grammar with
+  | Error _ -> print_s [%sexp (grammar : Grammar.t Or_error.t)]
+  | Ok grammar ->
+    ((*
+        abbbbc
+        1 2 2 2 2 3
+     *)
+     let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+     let parser = Parser.create grammar in
+     let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
+     print_string (Parser.Parser_output.to_string parser_output));
+    [%expect
+      {|
     |   0. |          S |   1 |   - |
     |   1. |          a |   - |   2 |
     |   2. |          A |   3 |   - |
@@ -1026,22 +1028,22 @@ let%expect_test "test parser works on toy grammar" =
     ; terminals = [ "a"; "b"; "c" ]
     ; starting_symbol = "S"
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    } |> Grammar.validate
+    }
+    |> Grammar.validate
   in
-  match grammar with 
-  | Error _ -> print_s [%sexp (grammar: Grammar.t Or_error.t)]
-  | Ok grammar -> (
-    (*
-       abbbbc
-       1 2 2 2 2 3
-    *)
-    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-    let parser = Parser.create grammar in
-    let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
-    print_string (Parser.Parser_output.to_string parser_output);
-  );
-  [%expect
-    {|
+  match grammar with
+  | Error _ -> print_s [%sexp (grammar : Grammar.t Or_error.t)]
+  | Ok grammar ->
+    ((*
+        abbbbc
+        1 2 2 2 2 3
+     *)
+     let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+     let parser = Parser.create grammar in
+     let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
+     print_string (Parser.Parser_output.to_string parser_output));
+    [%expect
+      {|
     |   0. |          S |   1 |   - |
     |   1. |          a |   - |   2 |
     |   2. |          A |   3 |   - |
@@ -1060,19 +1062,19 @@ let%expect_test "test parser on wrong input grammar" =
   let grammar =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
-    ; starting_symbol = "S" 
+    ; starting_symbol = "S"
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    } |> Grammar.validate
+    }
+    |> Grammar.validate
   in
-  match grammar with 
-  | Error _ -> print_s [%sexp (grammar: Grammar.t Or_error.t)]
-  | Ok grammar -> (
-    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-    let parser = Parser.create grammar in
-    let parser_output = Parser.parse parser [ "a"; "b"; "b"; "d"; "b"; "c" ] in
-    print_s [%sexp (parser_output : Parser.Parser_output.t Or_error.t)]
-  );
-  [%expect {|
+  match grammar with
+  | Error _ -> print_s [%sexp (grammar : Grammar.t Or_error.t)]
+  | Ok grammar ->
+    (let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+     let parser = Parser.create grammar in
+     let parser_output = Parser.parse parser [ "a"; "b"; "b"; "d"; "b"; "c" ] in
+     print_s [%sexp (parser_output : Parser.Parser_output.t Or_error.t)]);
+    [%expect {|
     (Error ("Goto to empty state" (state 2) d)) |}]
 ;;
 
@@ -1085,19 +1087,18 @@ let%expect_test "test parser works on more serious grammar" =
         [ [ "S" ], [ "a"; "S"; "b" ]; [ "S" ], [ "a"; "S"; "c" ]; [ "S" ], [ "d"; "b" ] ]
     }
   in
-  let grammar = Grammar.validate grammar in 
-  match grammar with 
-  | Error _ -> print_s[%sexp (grammar: Grammar.t Or_error.t)]
-  | Ok grammar -> (
-    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-    let parser = Parser.create grammar in
-    let parser_output =
-      Parser.parse parser [ "a"; "a"; "a"; "d"; "b"; "c"; "b"; "b" ] |> ok_exn
-    in
-    print_string (Parser.Parser_output.to_string parser_output);
-  );
-  [%expect
-    {|
+  let grammar = Grammar.validate grammar in
+  match grammar with
+  | Error _ -> print_s [%sexp (grammar : Grammar.t Or_error.t)]
+  | Ok grammar ->
+    (let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+     let parser = Parser.create grammar in
+     let parser_output =
+       Parser.parse parser [ "a"; "a"; "a"; "d"; "b"; "c"; "b"; "b" ] |> ok_exn
+     in
+     print_string (Parser.Parser_output.to_string parser_output));
+    [%expect
+      {|
     |   0. |          S |   1 |   - |
     |   1. |          a |   - |   2 |
     |   2. |          S |   4 |   3 |
