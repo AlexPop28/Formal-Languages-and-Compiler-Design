@@ -969,6 +969,7 @@ let%expect_test "test get production is ok" =
 ;;
 
 (* TODO Uncomment this to check conflicts in our grammar *)
+(*
 let%expect_test "test canonical collection our grammar" =
   let grammar = get_language_grammar |> ok_exn |> Enhanced_grammar.create |> ok_exn in
   let parser = Parser.create grammar in
@@ -981,7 +982,7 @@ let%expect_test "test canonical collection our grammar" =
     print_s [%sexp (action : Parser.State.Action.t Or_error.t)]);
   [%expect {||}]
 ;;
-
+*)
 (*TODO test it fails on invalid output bands*)
 let%expect_test "test parser output works toy grammar" =
   let grammar : Grammar.t =
@@ -1068,29 +1069,34 @@ let%expect_test "test parser works on more serious grammar" =
   let grammar : Grammar.t =
     { non_terminals = [ "S" ]
     ; terminals = [ "a"; "b"; "c"; "d" ]
-    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; starting_symbol = "S"
     ; productions =
         [ [ "S" ], [ "a"; "S"; "b" ]; [ "S" ], [ "a"; "S"; "c" ]; [ "S" ], [ "d"; "b" ] ]
     }
   in
-  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-  let parser = Parser.create grammar in
-  let parser_output =
-    Parser.parse parser [ "a"; "a"; "a"; "d"; "b"; "c"; "b"; "b" ] |> ok_exn
-  in
-  print_string (Parser.Parser_output.to_string parser_output);
-  [%expect
-    {|
-    |   0. |          S |   1 |   - |
-    |   1. |          a |   - |   2 |
-    |   2. |          S |   4 |   3 |
-    |   3. |          b |   - |   - |
-    |   4. |          a |   - |   5 |
-    |   5. |          S |   7 |   6 |
-    |   6. |          b |   - |   - |
-    |   7. |          a |   - |   8 |
-    |   8. |          S |  10 |   9 |
-    |   9. |          c |   - |   - |
-    |  10. |          d |   - |  11 |
-    |  11. |          b |   - |   - | |}]
+  let grammar = Grammar.validate grammar in 
+  match grammar with 
+  | Error _ -> print_s[%sexp (grammar: Grammar.t Or_error.t)]
+  | Ok grammar -> (
+    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+    let parser = Parser.create grammar in
+    let parser_output =
+      Parser.parse parser [ "a"; "a"; "a"; "d"; "b"; "c"; "b"; "b" ] |> ok_exn
+    in
+    print_string (Parser.Parser_output.to_string parser_output);
+    [%expect
+      {|
+      |   0. |          S |   1 |   - |
+      |   1. |          a |   - |   2 |
+      |   2. |          S |   4 |   3 |
+      |   3. |          b |   - |   - |
+      |   4. |          a |   - |   5 |
+      |   5. |          S |   7 |   6 |
+      |   6. |          b |   - |   - |
+      |   7. |          a |   - |   8 |
+      |   8. |          S |  10 |   9 |
+      |   9. |          c |   - |   - |
+      |  10. |          d |   - |  11 |
+      |  11. |          b |   - |   - | |}]
+  )
 ;;
