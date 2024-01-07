@@ -166,6 +166,16 @@ let%expect_test "test scanner easy input" =
   [%expect {| ("Symbol_table.get_symbol st 97" (a)) |}]
 ;;
 
+let%expect_test "test pif from_hum works" =
+  let result = scan ~program:{|
+          int a;
+          int b;
+        |} in
+  let _, pif = Or_error.ok_exn result in
+  print_s [%sexp (Pif.to_hum pif |> Pif.from_hum : Pif.t Or_error.t)];
+  [%expect "(Ok ((\";\" -1) (id 98) (int -1) (\";\" -1) (id 97) (int -1)))"]
+;;
+
 let%expect_test "test scanner p1 lab1" =
   let result =
     scan
@@ -2151,7 +2161,7 @@ let%expect_test "test p1.c works" =
   ("Goto to empty state" (state 92) })
   Raised at Base__Error.raise in file "src/error.ml" (inlined), line 9, characters 14-30
   Called from Base__Or_error.ok_exn in file "src/or_error.ml", line 107, characters 17-32
-  Called from Test__Compiler.(fun) in file "test/compiler.ml", line 2139, characters 3-38
+  Called from Test__Compiler.(fun) in file "test/compiler.ml", line 2156, characters 22-58
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 234, characters 12-19 |}]
 ;;
 

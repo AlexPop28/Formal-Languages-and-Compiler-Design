@@ -27,3 +27,21 @@ let to_hum t =
     (to_list t);
   Buffer.contents buffer
 ;;
+
+let from_hum s =
+  String.split s ~on:'\n'
+  |> List.map ~f:String.strip
+  |> List.filter ~f:(fun x -> String.length x > 0)
+  |> List.map ~f:(fun row ->
+    let row_entries = String.split ~on:':' row in
+    match row_entries with
+    | a :: b :: _ -> Ok (String.strip a, String.strip b)
+    | _ -> Or_error.error_s [%message ("invalid format for pif" : string) (row : string)])
+  |> List.map ~f:(fun processed_row ->
+    let%bind.Or_error a, b = processed_row in
+    match Int.of_string_opt a with
+    | None -> Or_error.error_string "Entry coulnd't be cast to int"
+    | Some x -> Ok (b, x))
+  |> Or_error.all
+  |> Or_error.map ~f:(fun x -> ref (List.rev x))
+;;
