@@ -985,22 +985,25 @@ let%expect_test "test canonical collection our grammar" =
 *)
 (*TODO test it fails on invalid output bands*)
 let%expect_test "test parser output works toy grammar" =
-  let grammar : Grammar.t =
+  let grammar =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
     ; starting_symbol = "S" (* TODO: validate productions in the create *)
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    }
+    } |> Grammar.validate
   in
-  (*
-     abbbbc
-     1 2 2 2 2 3
-  *)
-  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-  let parser_output =
-    Parser.Parser_output.create grammar [ 1; 2; 2; 2; 2; 3 ] |> ok_exn
-  in
-  print_string (Parser.Parser_output.to_string parser_output);
+  match grammar with 
+  | Error _ -> print_s [%sexp (grammar: Grammar.t Or_error.t)]
+  | Ok grammar -> (
+    (*
+       abbbbc
+       1 2 2 2 2 3
+    *)
+    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+    let parser = Parser.create grammar in
+    let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
+    print_string (Parser.Parser_output.to_string parser_output);
+  );
   [%expect
     {|
     |   0. |          S |   1 |   - |
@@ -1018,21 +1021,25 @@ let%expect_test "test parser output works toy grammar" =
 ;;
 
 let%expect_test "test parser works on toy grammar" =
-  let grammar : Grammar.t =
+  let grammar =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
-    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; starting_symbol = "S"
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    }
+    } |> Grammar.validate
   in
-  (*
-     abbbbc
-     1 2 2 2 2 3
-  *)
-  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-  let parser = Parser.create grammar in
-  let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
-  print_string (Parser.Parser_output.to_string parser_output);
+  match grammar with 
+  | Error _ -> print_s [%sexp (grammar: Grammar.t Or_error.t)]
+  | Ok grammar -> (
+    (*
+       abbbbc
+       1 2 2 2 2 3
+    *)
+    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+    let parser = Parser.create grammar in
+    let parser_output = Parser.parse parser [ "a"; "b"; "b"; "b"; "b"; "c" ] |> ok_exn in
+    print_string (Parser.Parser_output.to_string parser_output);
+  );
   [%expect
     {|
     |   0. |          S |   1 |   - |
@@ -1050,17 +1057,21 @@ let%expect_test "test parser works on toy grammar" =
 ;;
 
 let%expect_test "test parser on wrong input grammar" =
-  let grammar : Grammar.t =
+  let grammar =
     { non_terminals = [ "S"; "A" ]
     ; terminals = [ "a"; "b"; "c" ]
-    ; starting_symbol = "S" (* TODO: validate productions in the create *)
+    ; starting_symbol = "S" 
     ; productions = [ [ "S" ], [ "a"; "A" ]; [ "A" ], [ "b"; "A" ]; [ "A" ], [ "c" ] ]
-    }
+    } |> Grammar.validate
   in
-  let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
-  let parser = Parser.create grammar in
-  let parser_output = Parser.parse parser [ "a"; "b"; "b"; "d"; "b"; "c" ] in
-  print_s [%sexp (parser_output : Parser.Parser_output.t Or_error.t)];
+  match grammar with 
+  | Error _ -> print_s [%sexp (grammar: Grammar.t Or_error.t)]
+  | Ok grammar -> (
+    let grammar = Enhanced_grammar.create grammar |> Or_error.ok_exn in
+    let parser = Parser.create grammar in
+    let parser_output = Parser.parse parser [ "a"; "b"; "b"; "d"; "b"; "c" ] in
+    print_s [%sexp (parser_output : Parser.Parser_output.t Or_error.t)]
+  );
   [%expect {|
     (Error ("Goto to empty state" (state 2) d)) |}]
 ;;
@@ -1084,19 +1095,19 @@ let%expect_test "test parser works on more serious grammar" =
       Parser.parse parser [ "a"; "a"; "a"; "d"; "b"; "c"; "b"; "b" ] |> ok_exn
     in
     print_string (Parser.Parser_output.to_string parser_output);
-    [%expect
-      {|
-      |   0. |          S |   1 |   - |
-      |   1. |          a |   - |   2 |
-      |   2. |          S |   4 |   3 |
-      |   3. |          b |   - |   - |
-      |   4. |          a |   - |   5 |
-      |   5. |          S |   7 |   6 |
-      |   6. |          b |   - |   - |
-      |   7. |          a |   - |   8 |
-      |   8. |          S |  10 |   9 |
-      |   9. |          c |   - |   - |
-      |  10. |          d |   - |  11 |
-      |  11. |          b |   - |   - | |}]
-  )
+  );
+  [%expect
+    {|
+    |   0. |          S |   1 |   - |
+    |   1. |          a |   - |   2 |
+    |   2. |          S |   4 |   3 |
+    |   3. |          b |   - |   - |
+    |   4. |          a |   - |   5 |
+    |   5. |          S |   7 |   6 |
+    |   6. |          b |   - |   - |
+    |   7. |          a |   - |   8 |
+    |   8. |          S |  10 |   9 |
+    |   9. |          c |   - |   - |
+    |  10. |          d |   - |  11 |
+    |  11. |          b |   - |   - | |}]
 ;;
