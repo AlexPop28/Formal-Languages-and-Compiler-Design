@@ -2151,155 +2151,156 @@ let%expect_test "test p1.c works" =
   let tokens = List.map ~f:fst (Pif.to_list pif) in
   let parser_output = Parser.parse parser tokens |> ok_exn in
   print_string (Parser.Parser_output.to_string parser_output);
-  [%expect "
-    |   0. |      start |   1 |   - |
-    |   1. |          { |   - |   2 |
-    |   2. |    program |   4 |   3 |
-    |   3. |          } |   - |   - |
-    |   4. |    program |  15 |   5 |
-    |   5. |  statement |   6 |   - |
-    |   6. | expression |   8 |   7 |
-    |   7. |          ; |   - |   - |
-    |   8. | print_call |   9 |   - |
-    |   9. |  print_int |   - |  10 |
-    |  10. |          ( |   - |  11 |
-    |  11. | expression |  13 |  12 |
-    |  12. |          ) |   - |   - |
-    |  13. |       term |  14 |   - |
-    |  14. |         id |   - |   - |
-    |  15. |    program |  43 |  16 |
-    |  16. |  statement |  17 |   - |
-    |  17. | if_expression |  18 |   - |
-    |  18. |         if |   - |  19 |
-    |  19. |          ( |   - |  20 |
-    |  20. | expression |  41 |  21 |
-    |  21. | bool_operator |  40 |  22 |
-    |  22. | expression |  38 |  23 |
-    |  23. |          ) |   - |  24 |
-    |  24. |          { |   - |  25 |
-    |  25. |    program |  28 |  26 |
-    |  26. |          } |   - |  27 |
-    |  27. |          ; |   - |   - |
-    |  28. |  statement |  29 |   - |
-    |  29. | assignment |  30 |   - |
-    |  30. | expression |  36 |  31 |
-    |  31. |          = |   - |  32 |
-    |  32. | expression |  34 |  33 |
-    |  33. |          ; |   - |   - |
-    |  34. |       term |  35 |   - |
-    |  35. |         id |   - |   - |
-    |  36. |       term |  37 |   - |
-    |  37. |         id |   - |   - |
-    |  38. |       term |  39 |   - |
-    |  39. |         id |   - |   - |
-    |  40. |          > |   - |   - |
-    |  41. |       term |  42 |   - |
-    |  42. |         id |   - |   - |
-    |  43. |    program |  71 |  44 |
-    |  44. |  statement |  45 |   - |
-    |  45. | if_expression |  46 |   - |
-    |  46. |         if |   - |  47 |
-    |  47. |          ( |   - |  48 |
-    |  48. | expression |  69 |  49 |
-    |  49. | bool_operator |  68 |  50 |
-    |  50. | expression |  66 |  51 |
-    |  51. |          ) |   - |  52 |
-    |  52. |          { |   - |  53 |
-    |  53. |    program |  56 |  54 |
-    |  54. |          } |   - |  55 |
-    |  55. |          ; |   - |   - |
-    |  56. |  statement |  57 |   - |
-    |  57. | assignment |  58 |   - |
-    |  58. | expression |  64 |  59 |
-    |  59. |          = |   - |  60 |
-    |  60. | expression |  62 |  61 |
-    |  61. |          ; |   - |   - |
-    |  62. |       term |  63 |   - |
-    |  63. |         id |   - |   - |
-    |  64. |       term |  65 |   - |
-    |  65. |         id |   - |   - |
-    |  66. |       term |  67 |   - |
-    |  67. |         id |   - |   - |
-    |  68. |          > |   - |   - |
-    |  69. |       term |  70 |   - |
-    |  70. |         id |   - |   - |
-    |  71. |    program |  82 |  72 |
-    |  72. |  statement |  73 |   - |
-    |  73. | assignment |  74 |   - |
-    |  74. | expression |  80 |  75 |
-    |  75. |          = |   - |  76 |
-    |  76. | expression |  78 |  77 |
-    |  77. |          ; |   - |   - |
-    |  78. |       term |  79 |   - |
-    |  79. |         id |   - |   - |
-    |  80. |       term |  81 |   - |
-    |  81. |         id |   - |   - |
-    |  82. |    program |  89 |  83 |
-    |  83. |  statement |  84 |   - |
-    |  84. | variable_declaration |  86 |  85 |
-    |  85. |          ; |   - |   - |
-    |  86. |       type |  88 |  87 |
-    |  87. |         id |   - |   - |
-    |  88. |        int |   - |   - |
-    |  89. |    program | 102 |  90 |
-    |  90. |  statement |  91 |   - |
-    |  91. | assignment |  92 |   - |
-    |  92. | expression | 100 |  93 |
-    |  93. |          = |   - |  94 |
-    |  94. | expression |  96 |  95 |
-    |  95. |          ; |   - |   - |
-    |  96. |  read_call |  97 |   - |
-    |  97. |   read_int |   - |  98 |
-    |  98. |          ( |   - |  99 |
-    |  99. |          ) |   - |   - |
-    | 100. |       term | 101 |   - |
-    | 101. |         id |   - |   - |
-    | 102. |    program | 115 | 103 |
-    | 103. |  statement | 104 |   - |
-    | 104. | assignment | 105 |   - |
-    | 105. | expression | 113 | 106 |
-    | 106. |          = |   - | 107 |
-    | 107. | expression | 109 | 108 |
-    | 108. |          ; |   - |   - |
-    | 109. |  read_call | 110 |   - |
-    | 110. |   read_int |   - | 111 |
-    | 111. |          ( |   - | 112 |
-    | 112. |          ) |   - |   - |
-    | 113. |       term | 114 |   - |
-    | 114. |         id |   - |   - |
-    | 115. |    program | 128 | 116 |
-    | 116. |  statement | 117 |   - |
-    | 117. | assignment | 118 |   - |
-    | 118. | expression | 126 | 119 |
-    | 119. |          = |   - | 120 |
-    | 120. | expression | 122 | 121 |
-    | 121. |          ; |   - |   - |
-    | 122. |  read_call | 123 |   - |
-    | 123. |   read_int |   - | 124 |
-    | 124. |          ( |   - | 125 |
-    | 125. |          ) |   - |   - |
-    | 126. |       term | 127 |   - |
-    | 127. |         id |   - |   - |
-    | 128. |    program | 135 | 129 |
-    | 129. |  statement | 130 |   - |
-    | 130. | variable_declaration | 132 | 131 |
-    | 131. |          ; |   - |   - |
-    | 132. |       type | 134 | 133 |
-    | 133. |         id |   - |   - |
-    | 134. |        int |   - |   - |
-    | 135. |    program | 142 | 136 |
-    | 136. |  statement | 137 |   - |
-    | 137. | variable_declaration | 139 | 138 |
-    | 138. |          ; |   - |   - |
-    | 139. |       type | 141 | 140 |
-    | 140. |         id |   - |   - |
-    | 141. |        int |   - |   - |
-    | 142. |  statement | 143 |   - |
-    | 143. | variable_declaration | 145 | 144 |
-    | 144. |          ; |   - |   - |
-    | 145. |       type | 147 | 146 |
-    | 146. |         id |   - |   - |
-    | 147. |        int |   - |   - |"]
+  [%expect
+    "\n\
+    \    |   0. |      start |   1 |   - |\n\
+    \    |   1. |          { |   - |   2 |\n\
+    \    |   2. |    program |   4 |   3 |\n\
+    \    |   3. |          } |   - |   - |\n\
+    \    |   4. |    program |  15 |   5 |\n\
+    \    |   5. |  statement |   6 |   - |\n\
+    \    |   6. | expression |   8 |   7 |\n\
+    \    |   7. |          ; |   - |   - |\n\
+    \    |   8. | print_call |   9 |   - |\n\
+    \    |   9. |  print_int |   - |  10 |\n\
+    \    |  10. |          ( |   - |  11 |\n\
+    \    |  11. | expression |  13 |  12 |\n\
+    \    |  12. |          ) |   - |   - |\n\
+    \    |  13. |       term |  14 |   - |\n\
+    \    |  14. |         id |   - |   - |\n\
+    \    |  15. |    program |  43 |  16 |\n\
+    \    |  16. |  statement |  17 |   - |\n\
+    \    |  17. | if_expression |  18 |   - |\n\
+    \    |  18. |         if |   - |  19 |\n\
+    \    |  19. |          ( |   - |  20 |\n\
+    \    |  20. | expression |  41 |  21 |\n\
+    \    |  21. | bool_operator |  40 |  22 |\n\
+    \    |  22. | expression |  38 |  23 |\n\
+    \    |  23. |          ) |   - |  24 |\n\
+    \    |  24. |          { |   - |  25 |\n\
+    \    |  25. |    program |  28 |  26 |\n\
+    \    |  26. |          } |   - |  27 |\n\
+    \    |  27. |          ; |   - |   - |\n\
+    \    |  28. |  statement |  29 |   - |\n\
+    \    |  29. | assignment |  30 |   - |\n\
+    \    |  30. | expression |  36 |  31 |\n\
+    \    |  31. |          = |   - |  32 |\n\
+    \    |  32. | expression |  34 |  33 |\n\
+    \    |  33. |          ; |   - |   - |\n\
+    \    |  34. |       term |  35 |   - |\n\
+    \    |  35. |         id |   - |   - |\n\
+    \    |  36. |       term |  37 |   - |\n\
+    \    |  37. |         id |   - |   - |\n\
+    \    |  38. |       term |  39 |   - |\n\
+    \    |  39. |         id |   - |   - |\n\
+    \    |  40. |          > |   - |   - |\n\
+    \    |  41. |       term |  42 |   - |\n\
+    \    |  42. |         id |   - |   - |\n\
+    \    |  43. |    program |  71 |  44 |\n\
+    \    |  44. |  statement |  45 |   - |\n\
+    \    |  45. | if_expression |  46 |   - |\n\
+    \    |  46. |         if |   - |  47 |\n\
+    \    |  47. |          ( |   - |  48 |\n\
+    \    |  48. | expression |  69 |  49 |\n\
+    \    |  49. | bool_operator |  68 |  50 |\n\
+    \    |  50. | expression |  66 |  51 |\n\
+    \    |  51. |          ) |   - |  52 |\n\
+    \    |  52. |          { |   - |  53 |\n\
+    \    |  53. |    program |  56 |  54 |\n\
+    \    |  54. |          } |   - |  55 |\n\
+    \    |  55. |          ; |   - |   - |\n\
+    \    |  56. |  statement |  57 |   - |\n\
+    \    |  57. | assignment |  58 |   - |\n\
+    \    |  58. | expression |  64 |  59 |\n\
+    \    |  59. |          = |   - |  60 |\n\
+    \    |  60. | expression |  62 |  61 |\n\
+    \    |  61. |          ; |   - |   - |\n\
+    \    |  62. |       term |  63 |   - |\n\
+    \    |  63. |         id |   - |   - |\n\
+    \    |  64. |       term |  65 |   - |\n\
+    \    |  65. |         id |   - |   - |\n\
+    \    |  66. |       term |  67 |   - |\n\
+    \    |  67. |         id |   - |   - |\n\
+    \    |  68. |          > |   - |   - |\n\
+    \    |  69. |       term |  70 |   - |\n\
+    \    |  70. |         id |   - |   - |\n\
+    \    |  71. |    program |  82 |  72 |\n\
+    \    |  72. |  statement |  73 |   - |\n\
+    \    |  73. | assignment |  74 |   - |\n\
+    \    |  74. | expression |  80 |  75 |\n\
+    \    |  75. |          = |   - |  76 |\n\
+    \    |  76. | expression |  78 |  77 |\n\
+    \    |  77. |          ; |   - |   - |\n\
+    \    |  78. |       term |  79 |   - |\n\
+    \    |  79. |         id |   - |   - |\n\
+    \    |  80. |       term |  81 |   - |\n\
+    \    |  81. |         id |   - |   - |\n\
+    \    |  82. |    program |  89 |  83 |\n\
+    \    |  83. |  statement |  84 |   - |\n\
+    \    |  84. | variable_declaration |  86 |  85 |\n\
+    \    |  85. |          ; |   - |   - |\n\
+    \    |  86. |       type |  88 |  87 |\n\
+    \    |  87. |         id |   - |   - |\n\
+    \    |  88. |        int |   - |   - |\n\
+    \    |  89. |    program | 102 |  90 |\n\
+    \    |  90. |  statement |  91 |   - |\n\
+    \    |  91. | assignment |  92 |   - |\n\
+    \    |  92. | expression | 100 |  93 |\n\
+    \    |  93. |          = |   - |  94 |\n\
+    \    |  94. | expression |  96 |  95 |\n\
+    \    |  95. |          ; |   - |   - |\n\
+    \    |  96. |  read_call |  97 |   - |\n\
+    \    |  97. |   read_int |   - |  98 |\n\
+    \    |  98. |          ( |   - |  99 |\n\
+    \    |  99. |          ) |   - |   - |\n\
+    \    | 100. |       term | 101 |   - |\n\
+    \    | 101. |         id |   - |   - |\n\
+    \    | 102. |    program | 115 | 103 |\n\
+    \    | 103. |  statement | 104 |   - |\n\
+    \    | 104. | assignment | 105 |   - |\n\
+    \    | 105. | expression | 113 | 106 |\n\
+    \    | 106. |          = |   - | 107 |\n\
+    \    | 107. | expression | 109 | 108 |\n\
+    \    | 108. |          ; |   - |   - |\n\
+    \    | 109. |  read_call | 110 |   - |\n\
+    \    | 110. |   read_int |   - | 111 |\n\
+    \    | 111. |          ( |   - | 112 |\n\
+    \    | 112. |          ) |   - |   - |\n\
+    \    | 113. |       term | 114 |   - |\n\
+    \    | 114. |         id |   - |   - |\n\
+    \    | 115. |    program | 128 | 116 |\n\
+    \    | 116. |  statement | 117 |   - |\n\
+    \    | 117. | assignment | 118 |   - |\n\
+    \    | 118. | expression | 126 | 119 |\n\
+    \    | 119. |          = |   - | 120 |\n\
+    \    | 120. | expression | 122 | 121 |\n\
+    \    | 121. |          ; |   - |   - |\n\
+    \    | 122. |  read_call | 123 |   - |\n\
+    \    | 123. |   read_int |   - | 124 |\n\
+    \    | 124. |          ( |   - | 125 |\n\
+    \    | 125. |          ) |   - |   - |\n\
+    \    | 126. |       term | 127 |   - |\n\
+    \    | 127. |         id |   - |   - |\n\
+    \    | 128. |    program | 135 | 129 |\n\
+    \    | 129. |  statement | 130 |   - |\n\
+    \    | 130. | variable_declaration | 132 | 131 |\n\
+    \    | 131. |          ; |   - |   - |\n\
+    \    | 132. |       type | 134 | 133 |\n\
+    \    | 133. |         id |   - |   - |\n\
+    \    | 134. |        int |   - |   - |\n\
+    \    | 135. |    program | 142 | 136 |\n\
+    \    | 136. |  statement | 137 |   - |\n\
+    \    | 137. | variable_declaration | 139 | 138 |\n\
+    \    | 138. |          ; |   - |   - |\n\
+    \    | 139. |       type | 141 | 140 |\n\
+    \    | 140. |         id |   - |   - |\n\
+    \    | 141. |        int |   - |   - |\n\
+    \    | 142. |  statement | 143 |   - |\n\
+    \    | 143. | variable_declaration | 145 | 144 |\n\
+    \    | 144. |          ; |   - |   - |\n\
+    \    | 145. |       type | 147 | 146 |\n\
+    \    | 146. |         id |   - |   - |\n\
+    \    | 147. |        int |   - |   - |"]
 ;;
 
 let%expect_test "test p2.c works" =
