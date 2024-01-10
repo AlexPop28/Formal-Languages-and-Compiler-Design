@@ -3,21 +3,28 @@
 * Seminar 1
 <2023-10-09 Mon>
 ** Ex 1
+#+begin_src
 <letter> ::= a | b | c | ... | A | B | ... | Z
 <sequence_of_letters> ::= <letter> | <letter><sequence_of_letters>
+#+end_src
+
 
 ** Ex 2
+#+begin_src
 <non_zero_digit> ::= 1 | 2 | ... | 9
 <digit> ::= 0 | <non_zero_digit>
 <sign> ::= + | -
 <sequence_of_digits> ::= <digit> | <digit><sequence_of_digits>
 <prefix> ::= <non_zero_digit> | <sign><non_zero_digit>
 <integer> ::= 0 | <prefix> | <prefix><sequence_of_digits>
+#+end_src
 
 ** Ex2 in EBNF
+#+begin_src
 non_zero_digit = "1" | "2" | ... | "9"
 digit = "0" | non_zero_digit
 integer = "0" | ["+" | "-"]non_zero_digit{digit}
+#+end_src
 
 * Seminar 2 - Scanning
 <2023-10-16 Mon>
@@ -43,7 +50,7 @@ output:
 
 PIF
 #+CAPTION: PIF Table for =source.txt=
-| token   | st_pos |
+| token   | st pos |
 |---------+--------|
 | VAR     |     -1 |
 | id      |      0 |
@@ -89,14 +96,14 @@ PIF
 ST - only identifiers and constants
 #+CAPTION: Symbol Table for =source.txt=
 | st_pos | symbol      |
-|--------+-------------|
-|      0 | a           |
-|      1 | b           |
-|      2 | c           |
-|      3 | 12          |
-|      4 | 5           |
-|      5 | "A message" |
-|      6 | "b="        |
+|-------+-------------|
+|     0 | a           |
+|     1 | b           |
+|     2 | c           |
+|     3 | 12          |
+|     4 | 5           |
+|     5 | "A message" |
+|     6 | "b="        |
 
 ** Lexical errors
 *** Examples:
@@ -116,6 +123,130 @@ N = \{S\}
 P : S \rightarrow a^2S | bc\}
 \end{align*}
 
-$L(G) = \{a^{2n}bc | n \in \mathbb{N}\}
+$L(G) = \{a^{2n}bc | n \in \mathbb{N}\}$
 
 Proof by induction by double inclusion (see seminar notes on Teams).
+
+* Seminar W12
+** LR(1)
+
+#+begin_export latex
+G = ({S', S, A}, {a, b}, P, S')
+P: S' \rarr S
+(1) S \rarr AA
+(2) A \rarr aA
+(3) A \rarr b
+
+? w = abab \in L(G)
+
+#+end_export
+
+LR(1) item [A \rarr \alpha.\beta, a] (a \in \Sigma \cup {$})
+
+*** Canonical collection
+
+s_0 = closure({[S' \rarr .S, $]}) = {[S' \rarr .S, $], [S \rarr .AA, $], [A \rarr .aA, a], [A \rarr .aA, b], [A \rarr .b, a], [A \rarr .b, b]}
+
+s_1 = goto(s_0, S) = closure({[S' \rarr S., $]}) = {[S' \rarr S, $]}
+
+s_2 = goto(s_0, A) = closure({S \rarr A.A, $]}) = {[S \rarr A.A, $], [A \rarr .aA, $], [A \rarr .b, $]}
+
+s_3 = goto(s_0, a) = closure({[A \rarr a.A, a], [A \rarr a.A, b]}) = {[A \rarr a.A, a], [A \rarr a.A, b], [A \rarr .aA, a], [A \rarr .aA, b], [A \rarr .b, a], [A \rarr .b, b]}
+
+s_4 = goto(s_0, b) = closure({[A \rarr b., a], [A \rarr b., b]}) = {[A \rarr b., a], [A \rarr b., b]}
+
+s_5 = goto(s_2, A) = closure({[S \rarr AA., $]}) = {[S \rarr AA., $]}
+
+s_6 = goto(s2, a) = closure({[A \rarr a.A, $]}) = {[A \rarr a.A, $], [A \rarr .aA, $], [A \rarr .b, $]}
+
+s_7 = goto(s2, b) = closure({[A \rarr b., $]}) = {[A \rarr b., $]}
+
+s_8 = goto(s3, A) = closure({A \rarr aA., a], [A \rarr aA., b]}) = {[A \rarr aA., a], [A \rarr aA., b]}
+
+goto(s_3, a) = closure({[A \rarr a.A, a], [A \rarr a.A, b]}) = s_3
+
+goto(s3, b) = closure({[A \rarr b., a], [A \rarr b., b]}) = s_4
+
+s_9 = goto(s_6, A) = closure({[A \rarr aA., $]}) = {[A \rarr aA., $]}
+
+goto(s_6, a) = s_6
+
+goto(s_6, b) = s_7
+
+*** LR(1) table
+
+|    | action     |            |            | goto |    |
+|----+------------+------------+------------+------+----|
+|    | a          | b          | $          | S    | A  |
+|----+------------+------------+------------+------+----|
+| s_0 | shift s_3   | shift s_4   |            | s_1   | s_2 |
+| s_1 |            |            | accept     |      |    |
+| s_2 | shift s_6   | shift s_7   |            |      | s_5 |
+| s_3 | shift s_3   | shift s_4   |            |      | s_8 |
+| s_4 | reduce (3) | reduce (3) |            |      |    |
+| s_5 |            |            | reduce (1) |      |    |
+| s_6 | shift s_6   | shift s_7   |            |      | s_9 |
+| s_7 |            |            | reduce (3) |      |    |
+| s_8 | reduce (2) | reduce (2) |            |      |    |
+| s_9 |            |            | reduce (2) |      |    |
+
+
+# #+begin_src elisp
+# (add-to-list 'exec-path "/Library/TeX/texbin/pdflatex")
+# #+end_src
+
+*** Parsing
+
+|---------------------+-------------+-------------|
+| work stack          | input stack | output band |
+|---------------------+-------------+-------------|
+| $ s_0                | abab$       |           \epsilon |
+| $ s_0 a s_3           | bab$        |           \epsilon |
+| $ s_0 a s_3 b s_4      | ab$         |           \epsilon |
+| $ s_0 a s_3 A s_8      | ab$         |           3 |
+| $ s_0 A s_2           | ab$         |          23 |
+| $ s_0 A s_2 a s_6      | b$          |          23 |
+| $ s_0 A s_2 a s_6 b s_7 | $           |          23 |
+| $ s_0 A s_2 a s_6 A s_9 | $           |         323 |
+| $ s_0 A s_2 A s_5      | $           |        2323 |
+| $ s_0 S s_1           | $           |       12323 |
+| accept              |             |             |
+|---------------------+-------------+-------------|
+
+** LALR(1)
+*** Canonical collection
+C = {s_0, s_1, s_2, s_36, s_47, s_5, s_89}
+
+s_36 = {[A \rarr a.A, a | b | $], [A \rarr .aA, a | b | $], [A \rarr .b, a | b | $]}
+
+s_47 = {[A \rarr b., a | b | $]}
+
+s_89 = {[A \rarr aA., a | b | $]}
+
+*** LALR(1) table
+|     | action     |            |            | goto |     |
+|-----+------------+------------+------------+------+-----|
+|     | a          | b          | $          | S    | A   |
+|-----+------------+------------+------------+------+-----|
+| s_0  | shift s_36  | shift s_47  |            | s_1   | s_2  |
+| s_1  |            |            | accept     |      |     |
+| s_2 | shift s_36  | shift s_47  |            |      | s_5  |
+| s_36 | shift s_36  | shift s_47  |            |      | s_89 |
+| s_47 | reduce (3) | reduce (3) | reduce (3) |      |     |
+| s_5  |            |            | reduce (1) |      |     |
+| s_89 | reduce (2) | reduce (2) | reduce (2) |      |     |
+
+*** Parsing
+| work stack            | input stack | output band |
+|-----------------------+-------------+-------------|
+| $ s_0                  | abab$       |           \epsilon |
+| $ s_0 a s_36            | bab$        |           \epsilon |
+| $ s_0 a s_36 b s_47      | ab$         |           \epsilon |
+| $ s_0 a s_36 A s_89      | ab$         |           3 |
+| $ s_0 A s_2             | ab$         |          23 |
+| $ s_0 A s_2 a s_36       | b$          |          23 |
+| $ s_0 A s_2 a s_36 b s_47 | $           |          23 |
+| $ s_0 A s_2 a s_36 A s_89 | $           |         323 |
+| $ s_0 A s_2 A s_5        | $           |        2323 |
+| $ s_0 S s_1             | $           |       12323 |
+| accept                |             |             |
