@@ -1,0 +1,366 @@
+### Github link
+https://github.com/AlexPop28/Formal-Languages-and-Compiler-Design/tree/main
+
+
+```
+==> g1.txt <==
+((non_terminals (S A)) (terminals (a b c)) (starting_symbol S)
+   (productions (((S) (a A)) ((A) (b A)) ((A) (c)))))
+
+==> pif_g1.txt <==
+-1: a
+-1: b
+-1: b
+-1: b
+-1: b
+-1: c
+
+==> Output <==
+|   0. |          S |   1 |   - |
+|   1. |          a |   - |   2 |
+|   2. |          A |   3 |   - |
+|   3. |          b |   - |   4 |
+|   4. |          A |   5 |   - |
+|   5. |          b |   - |   6 |
+|   6. |          A |   7 |   - |
+|   7. |          b |   - |   8 |
+|   8. |          A |   9 |   - |
+|   9. |          b |   - |  10 |
+|  10. |          A |  11 |   - |
+|  11. |          c |   - |   - |
+
+
+==> g2.txt <==
+(
+  (non_terminals
+    (
+      start
+      program
+      statement
+      variable_declaration
+      assignment
+      if_expression
+      while_expression
+      type
+      get_call
+      set_call
+      read_call
+      print_call
+      
+      bool_operator 
+
+      expression
+      term
+    )
+  )
+  (terminals
+    ("+" "-" "*" "/" "%" "==" "<" "<=" ">" ">=" "=" "!=" "{" "}" "(" ")" ";" "," int str double get set read_int read_str read_double print_int print_str print_double if else while id const)
+  )
+  (starting_symbol start)
+  (productions
+    (
+      ((start) ("{" program "}"))
+      ((program) (statement))
+      ((program) (program statement))
+      ((statement) (variable_declaration ";"))
+      ((statement) (expression ";"))
+      ((statement) (assignment))
+      ((statement) (if_expression))
+      ((statement) (while_expression))
+
+      ((type) (int))
+      ((type) (str))
+      ((type) (double))
+
+      ((variable_declaration) (type id))
+
+      ((expression) (get_call))
+      ((expression) (set_call))
+      ((expression) (read_call))
+      ((expression) (print_call))
+
+      ((get_call) (get "(" expression "," expression ")"))
+      ((set_call) (set "(" expression "," expression "," expression ")"))
+
+      ((read_call) (read_int "(" ")"))
+      ((read_call) (read_str "(" ")"))
+      ((read_call) (read_double "(" ")"))
+
+      ((print_call) (print_int "(" expression ")"))
+      ((print_call) (print_str "(" expression ")"))
+      ((print_call) (print_double "(" expression ")"))
+
+      ((assignment) (expression "=" expression ";"))
+
+      ((if_expression) (if "(" expression bool_operator expression ")" "{" program "}" ";"))
+      ((if_expression) (if "(" expression bool_operator expression ")" "{" program "}" else "{" program "}" ";"))
+
+      ((while_expression) (while "(" expression bool_operator expression ")" "{" program "}"))
+
+      ((bool_operator) ("=="))
+      ((bool_operator) ("!="))
+      ((bool_operator) ("<"))
+      ((bool_operator) (">"))
+      ((bool_operator) ("<="))
+      ((bool_operator) (">="))
+
+      ((expression) (term))
+      ((expression) (expression "+" term))
+      ((expression) (expression "-" term))
+      ((expression) (expression "*" term))
+      ((expression) (expression "/" term))
+      ((expression) (expression "%" term))
+
+      ((term) (id))
+      ((term) (const))
+      ((term) ("(" expression ")"))
+    )
+  )
+)
+
+==> pif_g2.txt <==
+-1: {
+-1: int
+97: id
+-1: ;
+-1: int
+98: id
+-1: ;
+-1: int
+99: id
+-1: ;
+97: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+98: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+99: id
+-1: =
+-1: read_int
+-1: (
+-1: )
+-1: ;
+-1: int
+441021: id
+-1: ;
+441021: id
+-1: =
+97: id
+-1: ;
+-1: if
+-1: (
+98: id
+-1: >
+441021: id
+-1: )
+-1: {
+441021: id
+-1: =
+98: id
+-1: ;
+-1: }
+-1: ;
+-1: if
+-1: (
+99: id
+-1: >
+441021: id
+-1: )
+-1: {
+441021: id
+-1: =
+99: id
+-1: ;
+-1: }
+-1: ;
+-1: print_int
+-1: (
+441021: id
+-1: )
+-1: ;
+-1: }
+
+==> Output <==
+|   0. |      start |   1 |   - |
+|   1. |          { |   - |   2 |
+|   2. |    program |   4 |   3 |
+|   3. |          } |   - |   - |
+|   4. |    program |  15 |   5 |
+|   5. |  statement |   6 |   - |
+|   6. | expression |   8 |   7 |
+|   7. |          ; |   - |   - |
+|   8. | print_call |   9 |   - |
+|   9. |  print_int |   - |  10 |
+|  10. |          ( |   - |  11 |
+|  11. | expression |  13 |  12 |
+|  12. |          ) |   - |   - |
+|  13. |       term |  14 |   - |
+|  14. |         id |   - |   - |
+|  15. |    program |  43 |  16 |
+|  16. |  statement |  17 |   - |
+|  17. | if_expression |  18 |   - |
+|  18. |         if |   - |  19 |
+|  19. |          ( |   - |  20 |
+|  20. | expression |  41 |  21 |
+|  21. | bool_operator |  40 |  22 |
+|  22. | expression |  38 |  23 |
+|  23. |          ) |   - |  24 |
+|  24. |          { |   - |  25 |
+|  25. |    program |  28 |  26 |
+|  26. |          } |   - |  27 |
+|  27. |          ; |   - |   - |
+|  28. |  statement |  29 |   - |
+|  29. | assignment |  30 |   - |
+|  30. | expression |  36 |  31 |
+|  31. |          = |   - |  32 |
+|  32. | expression |  34 |  33 |
+|  33. |          ; |   - |   - |
+|  34. |       term |  35 |   - |
+|  35. |         id |   - |   - |
+|  36. |       term |  37 |   - |
+|  37. |         id |   - |   - |
+|  38. |       term |  39 |   - |
+|  39. |         id |   - |   - |
+|  40. |          > |   - |   - |
+|  41. |       term |  42 |   - |
+|  42. |         id |   - |   - |
+|  43. |    program |  71 |  44 |
+|  44. |  statement |  45 |   - |
+|  45. | if_expression |  46 |   - |
+|  46. |         if |   - |  47 |
+|  47. |          ( |   - |  48 |
+|  48. | expression |  69 |  49 |
+|  49. | bool_operator |  68 |  50 |
+|  50. | expression |  66 |  51 |
+|  51. |          ) |   - |  52 |
+|  52. |          { |   - |  53 |
+|  53. |    program |  56 |  54 |
+|  54. |          } |   - |  55 |
+|  55. |          ; |   - |   - |
+|  56. |  statement |  57 |   - |
+|  57. | assignment |  58 |   - |
+|  58. | expression |  64 |  59 |
+|  59. |          = |   - |  60 |
+|  60. | expression |  62 |  61 |
+|  61. |          ; |   - |   - |
+|  62. |       term |  63 |   - |
+|  63. |         id |   - |   - |
+|  64. |       term |  65 |   - |
+|  65. |         id |   - |   - |
+|  66. |       term |  67 |   - |
+|  67. |         id |   - |   - |
+|  68. |          > |   - |   - |
+|  69. |       term |  70 |   - |
+|  70. |         id |   - |   - |
+|  71. |    program |  82 |  72 |
+|  72. |  statement |  73 |   - |
+|  73. | assignment |  74 |   - |
+|  74. | expression |  80 |  75 |
+|  75. |          = |   - |  76 |
+|  76. | expression |  78 |  77 |
+|  77. |          ; |   - |   - |
+|  78. |       term |  79 |   - |
+|  79. |         id |   - |   - |
+|  80. |       term |  81 |   - |
+|  81. |         id |   - |   - |
+|  82. |    program |  89 |  83 |
+|  83. |  statement |  84 |   - |
+|  84. | variable_declaration |  86 |  85 |
+|  85. |          ; |   - |   - |
+|  86. |       type |  88 |  87 |
+|  87. |         id |   - |   - |
+|  88. |        int |   - |   - |
+|  89. |    program | 102 |  90 |
+|  90. |  statement |  91 |   - |
+|  91. | assignment |  92 |   - |
+|  92. | expression | 100 |  93 |
+|  93. |          = |   - |  94 |
+|  94. | expression |  96 |  95 |
+|  95. |          ; |   - |   - |
+|  96. |  read_call |  97 |   - |
+|  97. |   read_int |   - |  98 |
+|  98. |          ( |   - |  99 |
+|  99. |          ) |   - |   - |
+| 100. |       term | 101 |   - |
+| 101. |         id |   - |   - |
+| 102. |    program | 115 | 103 |
+| 103. |  statement | 104 |   - |
+| 104. | assignment | 105 |   - |
+| 105. | expression | 113 | 106 |
+| 106. |          = |   - | 107 |
+| 107. | expression | 109 | 108 |
+| 108. |          ; |   - |   - |
+| 109. |  read_call | 110 |   - |
+| 110. |   read_int |   - | 111 |
+| 111. |          ( |   - | 112 |
+| 112. |          ) |   - |   - |
+| 113. |       term | 114 |   - |
+| 114. |         id |   - |   - |
+| 115. |    program | 128 | 116 |
+| 116. |  statement | 117 |   - |
+| 117. | assignment | 118 |   - |
+| 118. | expression | 126 | 119 |
+| 119. |          = |   - | 120 |
+| 120. | expression | 122 | 121 |
+| 121. |          ; |   - |   - |
+| 122. |  read_call | 123 |   - |
+| 123. |   read_int |   - | 124 |
+| 124. |          ( |   - | 125 |
+| 125. |          ) |   - |   - |
+| 126. |       term | 127 |   - |
+| 127. |         id |   - |   - |
+| 128. |    program | 135 | 129 |
+| 129. |  statement | 130 |   - |
+| 130. | variable_declaration | 132 | 131 |
+| 131. |          ; |   - |   - |
+| 132. |       type | 134 | 133 |
+| 133. |         id |   - |   - |
+| 134. |        int |   - |   - |
+| 135. |    program | 142 | 136 |
+| 136. |  statement | 137 |   - |
+| 137. | variable_declaration | 139 | 138 |
+| 138. |          ; |   - |   - |
+| 139. |       type | 141 | 140 |
+| 140. |         id |   - |   - |
+| 141. |        int |   - |   - |
+| 142. |  statement | 143 |   - |
+| 143. | variable_declaration | 145 | 144 |
+| 144. |          ; |   - |   - |
+| 145. |       type | 147 | 146 |
+| 146. |         id |   - |   - |
+| 147. |        int |   - |   - |
+```
+
+### Documentation
+```
+Parse a program using grammar and pif
+
+  main.exe parser parse 
+
+=== flags ===
+
+  -grammar FILE              . Input grammar file
+  -pif FILE                  . Input pif file
+  [-output FILE]             . Output file (default: stdout)
+  [-help], -?                . print this help text and exit
+
+Run lexical analysis on a source code file
+
+  main.exe scan SOURCE-CODE-FILE
+
+=== flags ===
+
+  -constants FILE            . Constants file describing an automaton
+  -identifiers FILE          . Identifiers file describing an automaton
+  -pif FILE                  . Program internal form output file
+  -st FILE                   . Symbol table output file
+  -tokens FILE               . Tokens file
+  [-help], -?                . print this help text and exit
+```

@@ -1,0 +1,3 @@
+((non_terminals (S A)) (terminals (a b c)) (starting_symbol S)
+   (productions (((S) (a A)) ((A) (b A)) ((A) (c)))))
+

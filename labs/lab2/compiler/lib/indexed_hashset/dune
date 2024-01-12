@@ -2,4 +2,5 @@
  (name indexed_hashset)
  (modules indexed_hashset)
  (libraries core)
- (preprocess (pps ppx_jane)))
+ (preprocess
+  (pps ppx_jane)))
