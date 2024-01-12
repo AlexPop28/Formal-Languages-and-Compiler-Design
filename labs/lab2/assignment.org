@@ -1,0 +1,112 @@
+* Lexic.txt
+** Alphabet
+- lowercase letters of the English alphabet
+- digits =0-9=
+- underscore: =_=
+
+** Lexic
+*** Special symbols
+- operators: ~+, -, *, /, %, ==, <, <=, >, >=, =, !=~
+- separators: ~{, }, [, ], (, ), ;, space, newline, "~
+- reserved words: ~int, str, double, if, else, read_int, read_str, read_double, print_int, print_str, print_double, while, get, set~
+
+*** Identifiers
+A sequence of lowercase letters, digits and underscore with the first character being a lowercase letter.
+#+begin_src 
+identifier = (letter){letter|digit|"_"}
+letter = "a"|"b"..|"z"
+digit = "0"|non_zero_digit
+#+end_src
+
+*** Constants
+#+begin_src 
+int_constant = maybe_sign non_zero_digit {digit} | "0"
+non_zero_digit = "1"|"2"|...|"9"
+maybe_sign = ["+"|"-"]
+str_constant = """{letter|digit|"_"|" "}"""
+double_constant = (int_constant | (maybe_sign "0")) "." {digit}
+#+end_src
+
+* Syntax.in
+#+BEGIN_SRC 
+program = {statement}
+statement = ((variable_declaration | function_call | assignment) ";") | if | while
+
+type = "int" | "str" | "double"
+
+variable_declaration =
+  | type " " identifier
+  | type " " identifier "[" int_constant "]"
+
+function_call =
+  | get_call
+  | set_call
+  | read_call
+  | print_call
+
+get_call = "get" "(" identifier "," int_expression ")"
+set_call = "set" "(" identifier "," int_expression "," expression ")"
+read_call = ("read_int" | "read_str" | "read_double") "(" ")"
+print_call = ("print_int" | "print_str" | "print_double") "(" expression ")"
+
+assignment = identifier "=" expression
+
+if = "if" "(" bool_expression ")" "{" program "}" ["else" "{" program "}"]
+while = "while" "(" bool_expression ")" "{" program "}"
+
+constant = int_constant | str_constant | double_constant
+
+bool_operator = "==" | "!=" | "<" | ">" | "<=" | ">="
+bool_expression = (constant | identifier) bool_operator (constant | identifier)
+
+expression = int_expression | str_expression | double_expression
+  int_expression = int_term | int_term ("+" | "-") int_expression
+    int_term = int_factor | int_factor ("*" | "/" | "%") int_term 
+      int_factor = int_constant | identifier | "(" int_expression ")"
+  double_expression = double_term | double_term ("+" | "-") double_expression
+    double_term = double_factor | double_factor ("*" | "/") double_term 
+      double_factor = double_constant | identifier | "(" double_expression ")"
+  str_expression = str_term | str_term "+" str_expression
+    str_term = str_constant | identifier
+#+END_SRC
+
+* Token.in
+#+BEGIN_SRC
++
+-
+*
+/
+%
+==
+<
+<=
+>
+>=
+=
+!=
+{
+}
+(
+)
+[
+]
+;
+space
+newline
+"
+int
+str
+double
+if
+else
+while
+get
+set
+read_int
+read_str
+read_double
+print_int
+print_str
+print_double
+.
+#+END_SRC
