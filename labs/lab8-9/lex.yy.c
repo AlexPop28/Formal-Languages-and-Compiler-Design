@@ -559,6 +559,7 @@ char *yytext;
     {"]", CLOSE_SQUARE},
 
     {";", SEMICOLON},
+    {",", COMMA},
   };
 
   int map_to_token(char* text) {
@@ -572,8 +573,8 @@ char *yytext;
     printf("Token not found: %s\n", text);
     return -1;
   }
-#line 575 "lex.yy.c"
 #line 576 "lex.yy.c"
+#line 577 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -790,10 +791,10 @@ YY_DECL
 		}
 
 	{
-#line 75 "lang.l"
+#line 76 "lang.l"
 
 
-#line 796 "lex.yy.c"
+#line 797 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -852,61 +853,61 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 77 "lang.l"
+#line 78 "lang.l"
 { printf("Reserved word: %s\n", yytext); return map_to_token(yytext); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 78 "lang.l"
+#line 79 "lang.l"
 { printf("Operator: %s\n", yytext); return map_to_token(yytext);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 79 "lang.l"
+#line 80 "lang.l"
 { printf("Separator: %s\n", yytext); return map_to_token(yytext);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 80 "lang.l"
+#line 81 "lang.l"
 { printf("Identifier: %s\n", yytext); return IDENTIFIER; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 81 "lang.l"
+#line 82 "lang.l"
 { printf("Integer: %s\n", yytext); return INT_CONST; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 82 "lang.l"
+#line 83 "lang.l"
 { printf("Double: %s\n", yytext); return DOUBLE_CONST; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 83 "lang.l"
+#line 84 "lang.l"
 { printf("String: %s\n", yytext); return STRING_CONST; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 85 "lang.l"
+#line 86 "lang.l"
 {}
 	YY_BREAK
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 86 "lang.l"
+#line 87 "lang.l"
 {line_number++;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 88 "lang.l"
+#line 89 "lang.l"
 { printf("Lexical error; Unexpected token at line %d: %s\n", line_number, yytext); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 90 "lang.l"
+#line 91 "lang.l"
 ECHO;
 	YY_BREAK
-#line 909 "lex.yy.c"
+#line 910 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1911,11 +1912,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 90 "lang.l"
+#line 91 "lang.l"
 
-
-
-int main() {
-  yylex();
-}
 

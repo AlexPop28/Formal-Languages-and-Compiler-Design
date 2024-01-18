@@ -50,6 +50,7 @@
     {"]", CLOSE_SQUARE},
 
     {";", SEMICOLON},
+    {",", COMMA},
   };
 
   int map_to_token(char* text) {
