@@ -74,8 +74,8 @@
      SEMICOLON = 290,
      COMMA = 291,
      IDENTIFIER = 292,
-     DOUBLE_CONSTANT = 293,
-     INT_CONSTANT = 294,
+     DOUBLE_CONST = 293,
+     INT_CONST = 294,
      STRING_CONST = 295
    };
 #endif
@@ -115,8 +115,8 @@
 #define SEMICOLON 290
 #define COMMA 291
 #define IDENTIFIER 292
-#define DOUBLE_CONSTANT 293
-#define INT_CONSTANT 294
+#define DOUBLE_CONST 293
+#define INT_CONST 294
 #define STRING_CONST 295
 
 

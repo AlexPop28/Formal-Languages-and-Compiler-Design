@@ -11,7 +11,7 @@ while (d < n) {
   d = d + 1;
 }
 if (prime == 0) {
-  print_str("not prime")
+  print_str("not prime");
 } else {
-  print_str("prime")
+  print_str("prime");
 }

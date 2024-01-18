@@ -7,7 +7,7 @@ c = read_int();
 int ans;
 ans = a;
 if (b > ans) {
-  ans = b
+  ans = b;
 }
 if (c > ans) {
   ans = c;

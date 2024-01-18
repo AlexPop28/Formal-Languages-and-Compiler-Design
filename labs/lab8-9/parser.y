@@ -1,6 +1,11 @@
 %{
 	#include <ctype.h>
   #include <stdio.h>
+  #include <string.h>
+  #include "y.tab.h"
+
+  extern int yylex(void);
+  void yyerror(char *s);
 
   #define YYDEBUG 1
 
@@ -54,8 +59,8 @@
 %token SEMICOLON
 %token COMMA
 %token IDENTIFIER
-%token DOUBLE_CONSTANT
-%token INT_CONSTANT
+%token DOUBLE_CONST
+%token INT_CONST
 %token STRING_CONST
 
 %start program
@@ -82,7 +87,7 @@ type : INT { add_production(8); }
      ;
 
 variable_declaration : type IDENTIFIER { add_production(11); }
-                     | type IDENTIFIER OPEN_SQUARE INT_CONSTANT CLOSE_SQUARE { add_production(12); }
+                     | type IDENTIFIER OPEN_SQUARE INT_CONST CLOSE_SQUARE { add_production(12); }
                      ;
 
 function_call : get_call { add_production(13); }
@@ -117,11 +122,6 @@ if : IF OPEN_BRACKET bool_expression CLOSE_BRACKET OPEN_CURLY statement_list CLO
 while : WHILE OPEN_BRACKET bool_expression CLOSE_BRACKET OPEN_CURLY statement_list CLOSE_CURLY { add_production(30); }
       ;
 
-constant : INT_CONSTANT { add_production(31); }
-         | STRING_CONST { add_production(32); }
-         | DOUBLE_CONSTANT { add_production(33); }
-         ;
-
 bool_operator : EQ { add_production(34); }
               | NEQ { add_production(35); }
               | LT { add_production(36); }
@@ -130,11 +130,7 @@ bool_operator : EQ { add_production(34); }
               | GTE { add_production(39); }
               ;
 
-constant_or_identifier : constant { add_production(40); }
-                       | IDENTIFIER { add_production(41); }
-                       ;
-
-bool_expression : constant_or_identifier bool_operator constant_or_identifier { add_production(42); }
+bool_expression : expression bool_operator expression { add_production(42); }
                 ;
 
 expression : int_expression { add_production(43); }
@@ -153,9 +149,10 @@ int_term : int_factor { add_production(49); }
          | int_factor MOD int_term { add_production(52); }
          ;
 
-int_factor : INT_CONSTANT { add_production(53); }
+int_factor : INT_CONST { add_production(53); }
            | IDENTIFIER { add_production(54); }
            | OPEN_BRACKET int_expression CLOSE_BRACKET { add_production(55); }
+           | READ_INT OPEN_BRACKET CLOSE_BRACKET { add_production(70); }
            ;
 
 double_expression : double_term { add_production(56); }
@@ -168,9 +165,10 @@ double_term : double_factor { add_production(59); }
            | double_factor DIV double_term { add_production(61); }
            ;
 
-double_factor : DOUBLE_CONSTANT { add_production(62); }
+double_factor : DOUBLE_CONST { add_production(62); }
              | IDENTIFIER { add_production(63); }
              | OPEN_BRACKET double_expression CLOSE_BRACKET { add_production(64); }
+             | READ_DOUBLE OPEN_BRACKET CLOSE_BRACKET { add_production(71); }
              ;
 
 str_expression : str_term { add_production(65); }
@@ -179,46 +177,29 @@ str_expression : str_term { add_production(65); }
 
 str_term : str_constant { add_production(67); }
          | IDENTIFIER { add_production(68); }
+         | READ_STR OPEN_BRACKET CLOSE_BRACKET { add_production(72); }
          ;
 
 str_constant : STRING_CONST { add_production(69); }
              ;
-
 %%
 
-yyerror(char *s)
+void yyerror(char *s)
 {
     printf("%s\n", s);
 }
 
 extern FILE *yyin;
 
-int main(int argc, char** argv)
-{
-  if (argc > 1)
-  {
-    yyin = fopen(argv[1], "r");
-    if (!yyin)
-    {
-      printf("'%s': Could not open specified file\n", argv[1]);
-      return 1;
-    }
-  }
-
-  if (argc > 2 && strcmp(argv[2], "-d") == 0)
-  {
-    printf("Debug mode on\n");
-    yydebug = 1;
-  }
-
+int main(int argc, char** argv) {
   printf("Starting parsing...\n");
 
   if (yyparse() == 0)
-  {
-    printf("Parsing successful!\n");
-    print_productions();
-    return 0;
-  }
+    {
+      printf("Parsing successful!\n");
+      print_productions();
+      return 0;
+    }
 
   printf("Parsing failed!\n");
   return 0;
